@@ -12,6 +12,8 @@ scikit-image = "^0.24.0"
 matplotlib = "^3.9.2"
 nibabel = "^5.3.0"
 
+[tool.poetry.entrypoints]
+ref_cerebellum = "refregion.cli.ref_cerebellum:main"
 
 [build-system]
 requires = ["poetry-core"]
