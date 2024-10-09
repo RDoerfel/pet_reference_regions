@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "refregion"
+version = "0.1.0"
+description = "This package is thought to gather functions that can be used to create various gray matter references regions for PET analysis."
+authors = ["RDoerfel <doerfelruben@aol.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+scikit-image = "^0.24.0"
+matplotlib = "^3.9.2"
+nibabel = "^5.3.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
