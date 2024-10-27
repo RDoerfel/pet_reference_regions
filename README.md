@@ -9,13 +9,13 @@ poetry add git+https://github.com/RDoerfel/pet_reference_regions.git
 ```
 
 ## Cerebellum
-The cerebellum is a common reference region for PET analysis. The function `ref_cerebellum` creates a cerebellum mask based on the cerebellum subsegmentions provided by SUIT or FastSurfer's CerebNet. Addionally, the cortical segmentation from the aseg atlas (Free/FastSurfer) is used to exclude parts of the Cerebellum that are close to the Cortex to avoid spill over. Finally, all vermis regions are excluded from the cerebellum mask. 
+The cerebellum is a common reference region for PET analysis. The function `ref_cerebellum` creates a cerebellum mask based on the cerebellum subsegmentions provided by SUIT or FastSurfer's CerebNet. Addionally, the cortical segmentation from the aseg atlas (Free/FastSurfer) is used to exclude parts of the cerebellum that are close to the cortex to avoid spill over. Finally, all vermis regions are excluded from the cerebellum mask. 
 
 More specifically, the following steps are performed:
 1. erosion of the cerebellum mask with 1 voxel
 2. dialation of the cortical mask with 4 voxels
 3. dialation of all vermis regions with 4 voxels
-4. exclusion of the dialated vermis regions cortical regions from the cerebellum mask
+4. exclusion of the dialated vermis and cortical regions from the cerebellum mask
 
 ```bash
 ref_cerebellum -c <path/to/cerebellum_seg> -b <path/to/aseg_seg> -o <output_path>
