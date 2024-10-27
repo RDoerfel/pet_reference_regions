@@ -15,7 +15,7 @@ def cerebellum_reference_region(
 
     When using FastSurfers CerebNet, you might need to resample the cerebellum segmentation to the aseg segmentation.
     You will do so with the following command:
-    mri_vol2vol --mov {cerebellum_segmentation} --targ {brain_segmentation} --regheader --o {cerebellum_segmentation_resampled} --interp nearest
+    mri_vol2vol --mov {cerebellum_segmentation} --targ {aseg_segmentation_file} --regheader --o {cerebellum_segmentation_resampled} --interp nearest
 
     Args:
         cerebellum_segmentation_file (Path): Path to the cerebellum segmentation file. Should be from CerebNet (FastSurfer) or SUIT.
@@ -24,7 +24,7 @@ def cerebellum_reference_region(
     """
 
     cerebellum = nib.load(cerebellum_segmentation_file)
-    brain = nib.load(brain_segmentation)
+    brain = nib.load(aseg_segmentation_file)
 
     # labels: 3, 42 Cerebral Cortex
     # labels > 600 are cortex of the cerebellum
