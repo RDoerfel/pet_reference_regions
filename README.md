@@ -18,11 +18,12 @@ More specifically, the following steps are performed:
 4. exclusion of the dialated vermis regions cortical regions from the cerebellum mask
 
 ```bash
-ref_cerebellum -c <path_to_cerebellum_segmentation> -b <path_to_aseg_segmetnation> -o <output_path>
+ref_cerebellum -c <path/to/cerebellum_seg> -b <path/to/aseg_seg> -o <output_path>
 ```
 
 You might need to resample the cereballum segmantion to the same dimensions as the aseg segmentation. You can use the following command for that:
 
 ```bash
-mri_vol2vol --mov <cerebellum_seg> --targ <aseg_seg> --regheader --o <output_path> --interp nearest
+mri_vol2vol --mov <path/to/cerebellum_seg> --targ <path/to/aseg_seg> --regheader --o <path/to/resampled_cerebellum_seg> --interp nearest
+ref_cerebellum -c <path/to/resampled_cerebellum_seg> -b <path/to/aseg_seg> -o <path/to/refregion>
 ```
