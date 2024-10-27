@@ -29,7 +29,6 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install poetry
         poetry install
-        poetry shell
         poetry add flake8 pytest
     - name: Lint with flake8
       run: |
