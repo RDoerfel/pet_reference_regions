@@ -15,6 +15,22 @@ nibabel = "^5.3.0"
 [tool.poetry.scripts]
 ref_cerebellum = "refregion.cli.ref_cerebellum:main"
 
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.3"
+flake8 = "^7.1.1"
+coverage = {extras = ["toml"], version = "^7.6.4"}
+pytest-cov = "^5.0.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.coverage.paths]
+source = ["refregion"]
+
+[tool.coverage.run]
+branch = true
+source = ["refregion"]
+
+[tool.coverage.report]
+show_missing = true
