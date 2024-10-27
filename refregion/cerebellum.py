@@ -1,22 +1,11 @@
-# %%
 from pathlib import Path
 import numpy as np
 import nibabel as nib
 
 from refregion import morphology
 
-# %%
-data_dir = Path("/proc_data1/brainage/ERAP_Project_folder/BIDS")
-fastsurfer_dir = data_dir / "derivatives/fastsurfer"
 
-subject = "101"
-session = "Baseline"
-
-cerebellum_segmentation = fastsurfer_dir / f"sub-{subject}_ses-{session}/mri/cerebellum.CerebNet.nii.gz"
-brain_segmentation = fastsurfer_dir / f"sub-{subject}_ses-{session}/mri/aseg.auto.mgz"
-
-
-# %% load cerebellum segmentation
+# load cerebellum segmentation
 def cerebellum_reference_region(
     cerebellum_segmentation_file: Path, aseg_segmentation_file: Path, output_reference_region: Path
 ) -> None:
