@@ -57,17 +57,19 @@ def cerebellum_reference_region(cerebellum: nib.Nifti1Image, brain: nib.Nifti1Im
     vermis_mask = np.zeros(cerebellum.shape)
     vermis_mask[np.isin(cerebellum.get_fdata(), vermis_ids)] = 1
 
-    # first, dilate the cerebral cortex mask
-    cerebral_cortex_dilated = morphology.dilate(cerebral_cortex, 4)
+    # first, dialate the cerebral cortex mask
+    cerebral_cortex_dialated = morphology.dialate(cerebral_cortex, 4)
 
-    # second dilate the vermis mask
-    vermis_mask_dilated = morphology.dilate(vermis_mask, 4)
+    # second dialate the vermis mask
+    vermis_mask_dialated = morphology.dialate(vermis_mask, 4)
 
     # third erode the cerebellum mask
     cerebellum_no_vermis_mask_eroded = morphology.erode(cerebellum_no_vermis_mask, 1)
 
     # forth, remove the overlapping part from the eroded cerebellum mask
-    cerebellum_no_vermis_mask_limited = cerebellum_no_vermis_mask_eroded - cerebral_cortex_dilated - vermis_mask_dilated
+    cerebellum_no_vermis_mask_limited = (
+        cerebellum_no_vermis_mask_eroded - cerebral_cortex_dialated - vermis_mask_dialated
+    )
     cerebellum_no_vermis_mask_limited = np.clip(cerebellum_no_vermis_mask_limited, 0, 1)
 
     # plot remaining cerebellum on cerebellum segmentation
