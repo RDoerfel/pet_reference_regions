@@ -72,18 +72,5 @@ def cerebellum_reference_region(cerebellum: nib.Nifti1Image, brain: nib.Nifti1Im
     )
     cerebellum_no_vermis_mask_limited = np.clip(cerebellum_no_vermis_mask_limited, 0, 1)
 
-    # plot remaining cerebellum on cerebellum segmentation
-    mask_before = cerebellum_no_vermis_mask
-    mask_before[cerebral_cortex == 1] = 2
-    mask_before[vermis_mask == 1] = 3
-
-    mask_after = cerebellum_no_vermis_mask_limited
-    mask_after[cerebral_cortex == 1] = 2
-    mask_after[vermis_mask == 1] = 3
-
-    # create the eroded cerebellum mask
-    eroded_cerebellum = cerebellum.get_fdata()
-    eroded_cerebellum[cerebellum_no_vermis_mask_limited == 0] = 0
-
-    eroded_cerebellum_img = nib.Nifti1Image(eroded_cerebellum, cerebellum.affine, cerebellum.header)
+    eroded_cerebellum_img = nib.Nifti1Image(cerebellum_no_vermis_mask_limited, cerebellum.affine, cerebellum.header)
     return eroded_cerebellum_img
