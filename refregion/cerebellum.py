@@ -27,7 +27,6 @@ def cerebellum_reference_region(cerebellum: nib.Nifti1Image, brain: nib.Nifti1Im
 
     # take a mask from cerebellum in cerebellum segmentation (labels > 600)
     cerebellum_no_vermis_ids = [
-        600,
         601,
         602,
         603,
