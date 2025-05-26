@@ -11,8 +11,6 @@ python = "^3.9"
 scikit-image = "^0.24.0"
 matplotlib = "^3.9.2"
 nibabel = "^5.3.0"
-black = "^25.1.0"
-flake8 = "^7.2.0"
 
 [tool.poetry.scripts]
 ref_cerebellum = "refregion.cli.ref_cerebellum:main"
@@ -30,9 +28,13 @@ build-backend = "poetry.core.masonry.api"
 [tool.coverage.paths]
 source = ["refregion"]
 
+[tool.black]
+line-length = 120
+
 [tool.coverage.run]
 branch = true
 source = ["refregion"]
+omit = ["tests/*"]
 
 [tool.coverage.report]
 show_missing = true
