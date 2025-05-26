@@ -1,3 +1,7 @@
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
 [tool.poetry]
 name = "refregion"
 version = "0.1.0"
@@ -5,6 +9,7 @@ description = "This package is thought to gather functions that can be used to c
 authors = ["RDoerfel <doerfelruben@aol.com>"]
 license = "MIT"
 readme = "README.md"
+packages = [{include = "refregion"}]
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -18,12 +23,9 @@ ref_cerebellum = "refregion.cli.ref_cerebellum:main"
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
 flake8 = "^7.1.1"
+black = "^25.1.0"
 coverage = {extras = ["toml"], version = "^7.6.4"}
 pytest-cov = "^5.0.0"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 
 [tool.coverage.paths]
 source = ["refregion"]
