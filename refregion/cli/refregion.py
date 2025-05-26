@@ -5,8 +5,12 @@ from refregion import wrappers
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Create a custom reference region from a mask")
-    parser.add_argument("--mask", "-m", type=Path, required=True, help="Path to the mask file")
+    parser = argparse.ArgumentParser(
+        description="Create a custom reference region from a mask"
+    )
+    parser.add_argument(
+        "--mask", "-m", type=Path, required=True, help="Path to the mask file"
+    )
     parser.add_argument(
         "--ref_indices",
         "-r",
@@ -16,7 +20,12 @@ def main():
         help="Indices to include in the reference region (space-separated integers)",
     )
     parser.add_argument(
-        "--erode", "-e", type=int, required=False, default=0, help="Number of voxels to erode the reference region by"
+        "--erode",
+        "-e",
+        type=int,
+        required=False,
+        default=0,
+        help="Number of voxels to erode the reference region by",
     )
     parser.add_argument(
         "--exclude_indices",
@@ -35,7 +44,13 @@ def main():
         default=0,
         help="Number of voxels to dialate the excluded areas by. The overlap is removed from the reference region",
     )
-    parser.add_argument("--output", "-o", type=Path, required=True, help="Path to the output reference region file")
+    parser.add_argument(
+        "--output",
+        "-o",
+        type=Path,
+        required=True,
+        help="Path to the output reference region file",
+    )
     args = parser.parse_args()
 
     # load images

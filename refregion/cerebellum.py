@@ -58,7 +58,9 @@ def cerebellum_reference_region(
         628,
     ]
     cerebellum_no_vermis_mask = np.zeros(cerebellum.shape)
-    cerebellum_no_vermis_mask[np.isin(cerebellum.get_fdata(), cerebellum_no_vermis_ids)] = 1
+    cerebellum_no_vermis_mask[
+        np.isin(cerebellum.get_fdata(), cerebellum_no_vermis_ids)
+    ] = 1
 
     # get mask for Vermis
     vermis_ids = [606, 609, 612, 615, 618, 621, 624, 627]
@@ -66,19 +68,29 @@ def cerebellum_reference_region(
     vermis_mask[np.isin(cerebellum.get_fdata(), vermis_ids)] = 1
 
     # first, dialate the cerebral cortex mask
-    cerebral_cortex_dialated = morphology.dialate(cerebral_cortex, dialate_cortex_by_voxels)
+    cerebral_cortex_dialated = morphology.dialate(
+        cerebral_cortex, dialate_cortex_by_voxels
+    )
 
     # second dialate the vermis mask
     vermis_mask_dialated = morphology.dialate(vermis_mask, dialate_vermis_by_voxels)
 
     # third erode the cerebellum mask
-    cerebellum_no_vermis_mask_eroded = morphology.erode(cerebellum_no_vermis_mask, erode_cerebellum_by_voxels)
+    cerebellum_no_vermis_mask_eroded = morphology.erode(
+        cerebellum_no_vermis_mask, erode_cerebellum_by_voxels
+    )
 
     # forth, remove the overlapping part from the eroded cerebellum mask
-    cerebellum_no_vermis_mask_limited = cerebellum_no_vermis_mask_eroded - vermis_mask_dialated
-    cerebellum_no_vermis_mask_limited = cerebellum_no_vermis_mask_limited - cerebral_cortex_dialated
+    cerebellum_no_vermis_mask_limited = (
+        cerebellum_no_vermis_mask_eroded - vermis_mask_dialated
+    )
+    cerebellum_no_vermis_mask_limited = (
+        cerebellum_no_vermis_mask_limited - cerebral_cortex_dialated
+    )
 
     cerebellum_no_vermis_mask_limited = np.clip(cerebellum_no_vermis_mask_limited, 0, 1)
 
-    eroded_cerebellum_img = nib.Nifti1Image(cerebellum_no_vermis_mask_limited, cerebellum.affine, cerebellum.header)
+    eroded_cerebellum_img = nib.Nifti1Image(
+        cerebellum_no_vermis_mask_limited, cerebellum.affine, cerebellum.header
+    )
     return eroded_cerebellum_img

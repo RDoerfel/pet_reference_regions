@@ -3,7 +3,11 @@ from refregion import morphology
 
 
 def custom_ref_region(
-    mask: np.array, refregion_indices: list, erode_by_voxels: int, exclude_indices: list, dialate_by_voxels: int
+    mask: np.array,
+    refregion_indices: list,
+    erode_by_voxels: int,
+    exclude_indices: list,
+    dialate_by_voxels: int,
 ) -> np.array:
     """Create a custom reference region.
 

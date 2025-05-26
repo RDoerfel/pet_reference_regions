@@ -15,11 +15,17 @@ def custom_ref_region(
     # load data
     mask = nib.load(mask_file).get_fdata()
     # create custom reference region
-    mask_ref = refregion.custom_ref_region(mask, refregion_indices, erode_by_voxels, exclude_indices, dialate_by_voxels)
+    mask_ref = refregion.custom_ref_region(
+        mask, refregion_indices, erode_by_voxels, exclude_indices, dialate_by_voxels
+    )
     # cast as uint8
     mask_ref = mask_ref.astype(np.uint8)
     # save output
-    nib.save(nib.Nifti1Image(mask_ref, nib.load(mask_file).affine), output_file, dtype=np.uint8)
+    nib.save(
+        nib.Nifti1Image(mask_ref, nib.load(mask_file).affine),
+        output_file,
+        dtype=np.uint8,
+    )
 
 
 def cerebellum_reference_region(
