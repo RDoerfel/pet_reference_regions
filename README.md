@@ -30,6 +30,7 @@ This is a general-purpose CLI to create custom reference regions from anatomical
 
 **Optional Arguments:**
 
+- `--erode`, `-e`: Number of voxels to erode the selected refereence region areas by (default: 0)
 - `--exclude_indices`, `-x`: Indices to exclude from the reference region (space-separated integers, default: none)
 - `--dilate`, `-d`: Number of voxels to dilate the excluded areas by (default: 0)
 
@@ -39,9 +40,10 @@ The tool applies the following operations in sequence:
 
 1. Load mask file and extract specified reference indices
 2. Create initial reference region from specified indices
-3. Exclude indices (optional): Identify areas to exclude from the reference region
-4. Dilation (optional): Dilate the excluded areas by the specified number of voxels
-5. Final processing: Remove any overlap between dilated excluded areas and the reference region
+3. Erosion (optional): Erode the selected reference region areas by the specified number of voxels
+4. Exclude indices (optional): Identify areas to exclude from the reference region
+5. Dilation (optional): Dilate the excluded areas by the specified number of voxels
+6. Final processing: Remove any overlap between dilated excluded areas and the reference region
 
 #### Examples:
 
@@ -58,6 +60,7 @@ With exclusions and dilation:
 refregion \
     --mask brain_mask.nii.gz \
     --ref_indices 1 2 3 5 8 \
+    --erode 1 \
     --exclude_indices 10 11 12 \
     --dilate 3 \
     --output custom_reference_region.nii.gz

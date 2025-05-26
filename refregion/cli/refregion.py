@@ -16,6 +16,9 @@ def main():
         help="Indices to include in the reference region (space-separated integers)",
     )
     parser.add_argument(
+        "--erode", "-e", type=int, required=False, default=0, help="Number of voxels to erode the reference region by"
+    )
+    parser.add_argument(
         "--exclude_indices",
         "-x",
         type=int,
