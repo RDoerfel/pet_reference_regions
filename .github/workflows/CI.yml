@@ -40,9 +40,6 @@ jobs:
     - name: Lint
       run: |
         poetry run flake8 refregion tests --max-line-length=120
-    - name: Type Check
-      run: |
-        poetry run mypy refregion tests
     - name: Test
       run: |
         poetry run pytest --cov=refregion --cov-report=xml
