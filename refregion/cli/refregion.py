@@ -5,12 +5,8 @@ from refregion import wrappers
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Create a custom reference region from a mask"
-    )
-    parser.add_argument(
-        "--mask", "-m", type=Path, required=True, help="Path to the mask file"
-    )
+    parser = argparse.ArgumentParser(description="Create a custom reference region from a mask")
+    parser.add_argument("--mask", "-m", type=Path, required=True, help="Path to the mask file")
     parser.add_argument(
         "--ref_indices",
         "-r",
