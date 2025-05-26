@@ -2,6 +2,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15496253.svg)](https://doi.org/10.5281/zenodo.15496253)
 [![CI](https://github.com/RDoerfel/pet_reference_regions/actions/workflows/CI.yml/badge.svg)](https://github.com/RDoerfel/pet_reference_regions/actions/workflows/CI.yml)
+[![codecov](https://codecov.io/gh/RDoerfel/pet_reference_regions/branch/main/graph/badge.svg)](https://codecov.io/gh/RDoerfel/pet_reference_regions)
 
 This repository provides functions and command-line tools for creating various gray matter reference regions for positron emission tomography (PET) analysis. Reference regions are anatomical areas with minimal specific binding that serve as controls for quantifying tracer uptake in regions of interest.
 
