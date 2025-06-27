@@ -19,6 +19,7 @@ nibabel = "^5.3.0"
 
 [tool.poetry.scripts]
 ref_cerebellum = "refregion.cli.ref_cerebellum:main"
+refregion = "refregion.cli.refregion:main"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.3"
