@@ -32,9 +32,11 @@ This is a general-purpose CLI to create custom reference regions from anatomical
 
 **Optional Arguments:**
 
-- `--erode`, `-e`: Number of voxels to erode the selected refereence region areas by (default: 0)
+- `--erode`, `-e`: Number of voxels to erode the selected reference region areas by (default: 0)
 - `--exclude_indices`, `-x`: Indices to exclude from the reference region (space-separated integers, default: none)
 - `--dilate`, `-d`: Number of voxels to dilate the excluded areas by (default: 0)
+- `--probability_mask`, `-p`: Path to probability mask file (optional, for WM or GM probability)
+- `--probability_threshold`, `-t`: Threshold for probability mask (values >= threshold become 1, else 0)
 
 **Processing Pipeline:**
 
@@ -42,10 +44,11 @@ The tool applies the following operations in sequence:
 
 1. Load mask file and extract specified reference indices
 2. Create initial reference region from specified indices
-3. Erosion (optional): Erode the selected reference region areas by the specified number of voxels
-4. Exclude indices (optional): Identify areas to exclude from the reference region
-5. Dilation (optional): Dilate the excluded areas by the specified number of voxels
-6. Final processing: Remove any overlap between dilated excluded areas and the reference region
+3. Apply probability mask (optional): If a probability mask and threshold are provided, threshold the probability mask and multiply with the reference region
+4. Erosion (optional): Erode the selected reference region areas by the specified number of voxels
+5. Exclude indices (optional): Identify areas to exclude from the reference region
+6. Dilation (optional): Dilate the excluded areas by the specified number of voxels
+7. Final processing: Remove any overlap between dilated excluded areas and the reference region
 
 #### Examples:
 
@@ -65,6 +68,17 @@ refregion \
     --erode 1 \
     --exclude_indices 10 11 12 \
     --dilate 3 \
+    --output custom_reference_region.nii.gz
+```
+
+With probability mask (e.g., for gray matter probability):
+```bash
+refregion \
+    --mask brain_mask.nii.gz \
+    --ref_indices 1 2 3 5 8 \
+    --probability_mask gm_probability.nii.gz \
+    --probability_threshold 0.7 \
+    --erode 1 \
     --output custom_reference_region.nii.gz
 ```
 
