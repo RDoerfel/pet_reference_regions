@@ -13,11 +13,22 @@ def custom_ref_region(
     erode_by_voxels: int,
     exclude_indices: list,
     dialate_by_voxels: int,
+    probability_mask_file: Path = None,
+    probability_threshold: float = None,
 ):
     # load data
     mask = nib.load(mask_file).get_fdata()
+    
+    # load probability mask if provided
+    probability_mask = None
+    if probability_mask_file is not None:
+        probability_mask = nib.load(probability_mask_file).get_fdata()
+    
     # create custom reference region
-    mask_ref = refregion.custom_ref_region(mask, refregion_indices, erode_by_voxels, exclude_indices, dialate_by_voxels)
+    mask_ref = refregion.custom_ref_region(
+        mask, refregion_indices, erode_by_voxels, exclude_indices, dialate_by_voxels,
+        probability_mask, probability_threshold
+    )
     # cast as uint8
     mask_ref = mask_ref.astype(np.uint8)
     # save output

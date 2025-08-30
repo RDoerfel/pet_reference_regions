@@ -41,6 +41,20 @@ def main():
         help="Number of voxels to dialate the excluded areas by. The overlap is removed from the reference region",
     )
     parser.add_argument(
+        "--probability_mask",
+        "-p",
+        type=Path,
+        required=False,
+        help="Path to probability mask file (optional, for WM or GM probability)",
+    )
+    parser.add_argument(
+        "--probability_threshold",
+        "-t",
+        type=float,
+        required=False,
+        help="Threshold for probability mask (values >= threshold become 1, else 0)",
+    )
+    parser.add_argument(
         "--output",
         "-o",
         type=Path,
@@ -48,6 +62,10 @@ def main():
         help="Path to the output reference region file",
     )
     args = parser.parse_args()
+
+    # Validate probability mask arguments
+    if (args.probability_mask is not None) != (args.probability_threshold is not None):
+        parser.error("--probability_mask and --probability_threshold must be used together")
 
     # load images
     wrappers.custom_ref_region(
@@ -57,4 +75,6 @@ def main():
         erode_by_voxels=args.erode,
         exclude_indices=args.exclude_indices,
         dialate_by_voxels=args.dialate,
+        probability_mask_file=args.probability_mask,
+        probability_threshold=args.probability_threshold,
     )
