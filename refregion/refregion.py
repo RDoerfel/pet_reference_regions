@@ -13,9 +13,9 @@ def custom_ref_region(
 ) -> np.array:
     """Create a custom reference region.
 
-    First, the reference region is selected by including the indices in refregion_indices. If a probability mask 
+    First, the reference region is selected by including the indices in refregion_indices. If a probability mask
     and threshold are provided, the probability mask is thresholded and multiplied with the original mask.
-    Then, the reference region is eroded by erode_by_voxels. Next, the excluded indices are dilated by 
+    Then, the reference region is eroded by erode_by_voxels. Next, the excluded indices are dilated by
     dilate_by_voxels, and then the overlap is removed from the reference region.
 
     Args:
