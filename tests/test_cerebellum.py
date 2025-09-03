@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 import nibabel as nib
 from refregion.cerebellum import cerebellum_reference_region

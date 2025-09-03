@@ -1,4 +1,3 @@
-import pytest
 import numpy as np
 from refregion.refregion import custom_ref_region
 

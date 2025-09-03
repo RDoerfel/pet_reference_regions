@@ -1,9 +1,7 @@
-import pytest
 import numpy as np
 import nibabel as nib
 import tempfile
 from pathlib import Path
-from unittest.mock import patch, MagicMock
 from refregion.wrappers import custom_ref_region
 
 
