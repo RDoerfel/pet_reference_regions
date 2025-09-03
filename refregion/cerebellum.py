@@ -9,8 +9,8 @@ def cerebellum_reference_region(
     cerebellum: nib.Nifti1Image,
     brain: nib.Nifti1Image,
     erode_cerebellum_by_voxels: int = 1,
-    dialate_vermis_by_voxels: int = 4,
-    dialate_cortex_by_voxels: int = 4,
+    dilate_vermis_by_voxels: int = 4,
+    dilate_cortex_by_voxels: int = 4,
 ) -> nib.Nifti1Image:
     """Create a cerebellum reference region from the cerebellum segmentation. Use the aseg segmentation to increase
     the area of cortex and remove the overlap with the cerebellar mask to avoid spill over. Further, increase the area
@@ -20,8 +20,8 @@ def cerebellum_reference_region(
         cerebellum (nib.Nifti1Image): Cerebellum segmentation image. Should be from CerebNet (FastSurfer) or SUIT.
         brain (nib.Nifti1Image): Brain segmentation image.
         erode_cerebellum_by_voxels (int, optional): Number of voxels to erode the cerebellum mask. Defaults to 1.
-        dialate_vermis_by_voxels (int, optional): Number of voxels to dialate the vermis mask. Defaults to 4.
-        dialate_cortex_by_voxels (int, optional): Number of voxels to dialate the cortex mask. Defaults to 4.
+        dilate_vermis_by_voxels (int, optional): Number of voxels to dilate the vermis mask. Defaults to 4.
+        dilate_cortex_by_voxels (int, optional): Number of voxels to dilate the cortex mask. Defaults to 4.
 
     Returns:
         nib.Nifti1Image: The resulting cerebellum reference region image.
@@ -65,18 +65,18 @@ def cerebellum_reference_region(
     vermis_mask = np.zeros(cerebellum.shape)
     vermis_mask[np.isin(cerebellum.get_fdata(), vermis_ids)] = 1
 
-    # first, dialate the cerebral cortex mask
-    cerebral_cortex_dialated = morphology.dialate(cerebral_cortex, dialate_cortex_by_voxels)
+    # first, dilate the cerebral cortex mask
+    cerebral_cortex_dilated = morphology.dilate(cerebral_cortex, dilate_cortex_by_voxels)
 
-    # second dialate the vermis mask
-    vermis_mask_dialated = morphology.dialate(vermis_mask, dialate_vermis_by_voxels)
+    # second dilate the vermis mask
+    vermis_mask_dilated = morphology.dilate(vermis_mask, dilate_vermis_by_voxels)
 
     # third erode the cerebellum mask
     cerebellum_no_vermis_mask_eroded = morphology.erode(cerebellum_no_vermis_mask, erode_cerebellum_by_voxels)
 
     # forth, remove the overlapping part from the eroded cerebellum mask
-    cerebellum_no_vermis_mask_limited = cerebellum_no_vermis_mask_eroded - vermis_mask_dialated
-    cerebellum_no_vermis_mask_limited = cerebellum_no_vermis_mask_limited - cerebral_cortex_dialated
+    cerebellum_no_vermis_mask_limited = cerebellum_no_vermis_mask_eroded - vermis_mask_dilated
+    cerebellum_no_vermis_mask_limited = cerebellum_no_vermis_mask_limited - cerebral_cortex_dilated
 
     cerebellum_no_vermis_mask_limited = np.clip(cerebellum_no_vermis_mask_limited, 0, 1)
 
