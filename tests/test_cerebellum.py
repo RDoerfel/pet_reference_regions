@@ -28,7 +28,9 @@ def test_cerebellum_reference_region_basic():
     cerebellum_img = create_test_nifti_image(cerebellum_data)
     brain_img = create_test_nifti_image(brain_data)
 
-    result = cerebellum_reference_region(cerebellum_img, brain_img, erode_cerebellum_by_voxels=0, dilate_vermis_by_voxels=1, dilate_cortex_by_voxels=1)
+    result = cerebellum_reference_region(
+        cerebellum_img, brain_img, erode_cerebellum_by_voxels=0, dilate_vermis_by_voxels=1, dilate_cortex_by_voxels=1
+    )
 
     # Result should be a NIfTI image
     assert isinstance(result, nib.Nifti1Image)

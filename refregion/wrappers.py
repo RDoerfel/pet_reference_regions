@@ -27,7 +27,6 @@ def custom_ref_region(
         raise ValueError(f"dilate_by_voxels must be >= 0, got {dilate_by_voxels}")
     if probability_threshold is not None and (probability_threshold < 0 or probability_threshold > 1):
         raise ValueError(f"probability_threshold must be between 0 and 1, got {probability_threshold}")
-    
     # load data
     try:
         mask_img = nib.load(mask_file)
@@ -41,7 +40,9 @@ def custom_ref_region(
         try:
             probability_mask = nib.load(probability_mask_file).get_fdata()
             if probability_mask.shape != mask.shape:
-                raise ValueError(f"Probability mask shape {probability_mask.shape} does not match mask shape {mask.shape}")
+                raise ValueError(
+                    f"Probability mask shape {probability_mask.shape} does not match mask shape {mask.shape}"
+                )
         except Exception as e:
             raise RuntimeError(f"Failed to load probability mask file {probability_mask_file}: {e}")
 
@@ -80,13 +81,11 @@ def cerebellum_reference_region(
         raise FileNotFoundError(f"Cerebellum segmentation file does not exist: {cerebellum_segmentation_file}")
     if not brain_segmentation.exists():
         raise FileNotFoundError(f"Brain segmentation file does not exist: {brain_segmentation}")
-    
     # load data
     try:
         cerebellum_img = nib.load(cerebellum_segmentation_file)
         cerebellum_data = cerebellum_img.get_fdata()
         brain_data = nib.load(brain_segmentation).get_fdata()
-        
         if cerebellum_data.shape != brain_data.shape:
             raise ValueError(f"Cerebellum shape {cerebellum_data.shape} does not match brain shape {brain_data.shape}")
     except Exception as e:
