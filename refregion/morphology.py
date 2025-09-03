@@ -6,16 +6,16 @@ def _clip(mask: np.ndarray, between: tuple = (0, 1)) -> np.ndarray:
     return np.clip(mask, *between)
 
 
-def dialate(mask: np.ndarray, by_radius: int) -> np.ndarray:
+def dilate(mask: np.ndarray, by_radius: int) -> np.ndarray:
     """Dialate a 3D binary mask by a given radius (using a ball structuring element)
     Args:
         mask (np.ndarray): 3D binary mask
-        by_radius (int): Radius to dialate the mask by
+        by_radius (int): Radius to dilate the mask by
     Returns:
         np.ndarray: Dialated mask"""
 
-    dialated_mask = morphology.binary_dilation(mask, morphology.ball(by_radius))
-    return _clip(dialated_mask)
+    dilated_mask = morphology.binary_dilation(mask, morphology.ball(by_radius))
+    return _clip(dilated_mask)
 
 
 def erode(mask: np.ndarray, by_radius: int) -> np.ndarray:

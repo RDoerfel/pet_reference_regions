@@ -12,7 +12,7 @@ def custom_ref_region(
     refregion_indices: list,
     erode_by_voxels: int,
     exclude_indices: list,
-    dialate_by_voxels: int,
+    dilate_by_voxels: int,
     probability_mask_file: Path = None,
     probability_threshold: float = None,
 ):
@@ -26,7 +26,7 @@ def custom_ref_region(
     
     # create custom reference region
     mask_ref = refregion.custom_ref_region(
-        mask, refregion_indices, erode_by_voxels, exclude_indices, dialate_by_voxels,
+        mask, refregion_indices, erode_by_voxels, exclude_indices, dilate_by_voxels,
         probability_mask, probability_threshold
     )
     # cast as uint8

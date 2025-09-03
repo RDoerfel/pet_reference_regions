@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 
-from refregion.wrapper import cerebellum_reference_region
+from refregion.wrappers import cerebellum_reference_region
 
 
 def main():
@@ -30,9 +30,9 @@ def main():
     args = parser.parse_args()
 
     cerebellum_reference_region(
-        args.cerebellum_segmentation_file,
-        args.brain_segmentation,
-        args.output_reference_region,
+        args.cerebellum,
+        args.brain,
+        args.output,
     )
 
 

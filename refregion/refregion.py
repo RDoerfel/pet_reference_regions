@@ -7,7 +7,7 @@ def custom_ref_region(
     refregion_indices: list,
     erode_by_voxels: int,
     exclude_indices: list,
-    dialate_by_voxels: int,
+    dilate_by_voxels: int,
     probability_mask: np.array = None,
     probability_threshold: float = None,
 ) -> np.array:
@@ -15,15 +15,15 @@ def custom_ref_region(
 
     First, the reference region is selected by including the indices in refregion_indices. If a probability mask 
     and threshold are provided, the probability mask is thresholded and multiplied with the original mask.
-    Then, the reference region is eroded by erode_by_voxels. Next, the excluded indices are dialated by 
-    dialate_by_voxels, and then the overlap is removed from the reference region.
+    Then, the reference region is eroded by erode_by_voxels. Next, the excluded indices are dilated by 
+    dilate_by_voxels, and then the overlap is removed from the reference region.
 
     Args:
         mask (np.array): 3D binary mask
         refregion_indices (list): List of indices to include in the reference region
         erode_by_voxels (int): Number of voxels to erode the reference region by
         exclude_indices (list): List of indices to exclude from the reference region
-        dialate_by_voxels (int): Number of voxels to dialate the excluded areas by
+        dilate_by_voxels (int): Number of voxels to dilate the excluded areas by
         probability_mask (np.array, optional): 3D probability mask (values between 0-1)
         probability_threshold (float, optional): Threshold for probability mask (>= threshold becomes 1, else 0)
     Returns:
@@ -42,7 +42,7 @@ def custom_ref_region(
 
     exclude_mask = np.zeros(mask.shape)
     exclude_mask[np.isin(mask, exclude_indices)] = 1
-    exclude_mask = morphology.dialate(exclude_mask, dialate_by_voxels)
+    exclude_mask = morphology.dilate(exclude_mask, dilate_by_voxels)
 
     refregion = refregion - exclude_mask
     return morphology._clip(refregion)

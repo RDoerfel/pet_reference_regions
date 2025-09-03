@@ -1,8 +1,8 @@
 import numpy as np
-from refregion.morphology import dialate, erode
+from refregion.morphology import dilate, erode
 
 
-def test_dialate():
+def test_dilate():
     # Create a simple binary 3D mask
     mask = np.array(
         [
@@ -58,7 +58,7 @@ def test_dialate():
     )
 
     # Perform dilation
-    result = dialate(mask, 1)
+    result = dilate(mask, 1)
 
     # Assert the result is as expected
     assert np.array_equal(result, expected_result), "Dialate function failed"

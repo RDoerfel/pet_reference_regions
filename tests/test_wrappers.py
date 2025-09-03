@@ -28,7 +28,7 @@ def test_custom_ref_region_wrapper_basic():
             refregion_indices=[1, 2],
             erode_by_voxels=0,
             exclude_indices=[],
-            dialate_by_voxels=0
+            dilate_by_voxels=0
         )
         
         # Check output file exists and has correct data
@@ -64,7 +64,7 @@ def test_custom_ref_region_wrapper_with_probability_mask():
             refregion_indices=[1, 2],
             erode_by_voxels=0,
             exclude_indices=[],
-            dialate_by_voxels=0,
+            dilate_by_voxels=0,
             probability_mask_file=prob_mask_file,
             probability_threshold=0.5
         )
@@ -99,7 +99,7 @@ def test_custom_ref_region_wrapper_probability_mask_none():
             refregion_indices=[1, 2],
             erode_by_voxels=0,
             exclude_indices=[],
-            dialate_by_voxels=0,
+            dilate_by_voxels=0,
             probability_mask_file=None,
             probability_threshold=0.5
         )
@@ -133,7 +133,7 @@ def test_custom_ref_region_wrapper_output_dtype():
             refregion_indices=[1, 2],
             erode_by_voxels=0,
             exclude_indices=[],
-            dialate_by_voxels=0
+            dilate_by_voxels=0
         )
         
         # Check output dtype
