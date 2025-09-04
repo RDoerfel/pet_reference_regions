@@ -85,6 +85,17 @@ jobs:
           # Add .nojekyll to prevent Jekyll processing
           touch _site/.nojekyll
           
+          # Create security headers file for GitHub Pages
+          cat > _site/_headers << 'EOF'
+          /*
+            Cross-Origin-Embedder-Policy: require-corp
+            Cross-Origin-Opener-Policy: same-origin
+            Content-Security-Policy: default-src 'self' 'unsafe-eval' 'unsafe-inline' https://cdn.jsdelivr.net data: blob:; frame-ancestors 'none';
+            X-Frame-Options: DENY
+            X-Content-Type-Options: nosniff
+            Referrer-Policy: strict-origin-when-cross-origin
+          EOF
+          
           # Create a simple robots.txt
           echo "User-agent: *" > _site/robots.txt
           echo "Allow: /" >> _site/robots.txt

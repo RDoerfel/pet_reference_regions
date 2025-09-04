@@ -276,9 +276,15 @@ class NiftiVisualization {
                 
                 let value = slice.data[sliceIndex] || 0;
                 
-                // Normalize to 0-255 range
+                // Proper intensity windowing based on image statistics
                 if (value > 0) {
-                    value = Math.min(255, Math.max(50, value * 10)); // Enhance contrast
+                    // Use proper medical imaging windowing instead of arbitrary scaling
+                    // Typical brain imaging window: 0-100 for segmentations
+                    const minWindow = 0;
+                    const maxWindow = Math.max(100, this.getImageMax() || 100);
+                    value = Math.min(255, Math.max(0, 
+                        255 * (value - minWindow) / (maxWindow - minWindow)
+                    ));
                 }
                 
                 const pixelIndex = (canvasY * canvasWidth + canvasX) * 4;
@@ -328,19 +334,39 @@ class NiftiVisualization {
     }
 
     /**
-     * Reset visualization
+     * Reset visualization with proper memory cleanup
      */
     reset() {
+        // Clear data references
         this.segmentationData = null;
         this.referenceMask = null;
         this.exclusionMask = null;
         this.probabilityMask = null;
         this.shape = null;
         
-        // Clear all canvases
+        // Clear all canvases with proper memory cleanup
         Object.values(this.contexts).forEach(ctx => {
-            ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+            if (ctx && ctx.canvas) {
+                // Clear the canvas
+                ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+                
+                // Reset canvas transformation matrix to prevent memory leaks
+                ctx.setTransform(1, 0, 0, 1, 0, 0);
+                
+                // Clear any cached image data
+                try {
+                    const imageData = ctx.createImageData(1, 1);
+                    ctx.putImageData(imageData, 0, 0);
+                } catch (e) {
+                    // Ignore errors during cleanup
+                }
+            }
         });
+        
+        // Force garbage collection hint
+        if (window.gc) {
+            window.gc();
+        }
     }
 
     /**
@@ -377,6 +403,31 @@ class NiftiVisualization {
         }
         
         this.renderAll();
+    }
+
+    /**
+     * Get maximum value in segmentation data for proper windowing
+     */
+    getImageMax() {
+        if (!this.segmentationData || !this.shape) return null;
+        
+        let maxVal = 0;
+        // Sample a subset of the data to estimate max value efficiently
+        const sampleSize = Math.min(1000, this.shape[0] * this.shape[1] * this.shape[2]);
+        const step = Math.max(1, Math.floor(this.shape[0] * this.shape[1] * this.shape[2] / sampleSize));
+        
+        for (let i = 0; i < this.shape[0]; i += step) {
+            for (let j = 0; j < this.shape[1]; j += step) {
+                for (let k = 0; k < this.shape[2]; k += step) {
+                    if (this.segmentationData[i] && this.segmentationData[i][j] && 
+                        typeof this.segmentationData[i][j][k] === 'number') {
+                        maxVal = Math.max(maxVal, this.segmentationData[i][j][k]);
+                    }
+                }
+            }
+        }
+        
+        return maxVal || 100; // Default fallback
     }
 }
 

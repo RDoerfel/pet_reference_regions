@@ -128,11 +128,26 @@ class PETRefRegionApp {
     }
 
     /**
-     * Check if file is a valid NIfTI file
+     * Check if file is a valid NIfTI file with size validation
      */
     isNiftiFile(file) {
         const name = file.name.toLowerCase();
-        return name.endsWith('.nii') || name.endsWith('.nii.gz');
+        const isValidExtension = name.endsWith('.nii') || name.endsWith('.nii.gz');
+        
+        // Security: Limit file size to 500MB to prevent memory exhaustion
+        const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+        if (file.size > MAX_FILE_SIZE) {
+            this.showError(`File too large (${this.formatFileSize(file.size)}). Maximum size is ${this.formatFileSize(MAX_FILE_SIZE)}.`);
+            return false;
+        }
+        
+        // Basic file type validation
+        if (!isValidExtension) {
+            this.showError('Invalid file type. Please upload a NIfTI file (.nii or .nii.gz).');
+            return false;
+        }
+        
+        return true;
     }
 
     /**
@@ -359,12 +374,82 @@ class PETRefRegionApp {
     }
 
     /**
-     * Show error message
+     * Show error message with better UX
      */
     showError(message) {
-        console.error(message);
-        alert(`Error: ${message}`);
+        console.error('WebApp Error:', message);
+        
+        // Create or update error modal
+        let errorModal = document.getElementById('error-modal');
+        if (!errorModal) {
+            errorModal = this.createErrorModal();
+        }
+        
+        // Update error content
+        const errorMessage = errorModal.querySelector('.error-message');
+        const errorDetails = errorModal.querySelector('.error-details');
+        
+        errorMessage.textContent = 'Application Error';
+        errorDetails.textContent = message;
+        
+        // Show modal
+        errorModal.style.display = 'flex';
         this.hideStatus();
+        
+        // Auto-hide after 10 seconds for non-critical errors
+        if (!message.includes('Failed to') && !message.includes('Critical')) {
+            setTimeout(() => {
+                if (errorModal.style.display === 'flex') {
+                    errorModal.style.display = 'none';
+                }
+            }, 10000);
+        }
+    }
+
+    /**
+     * Create error modal for better error display
+     */
+    createErrorModal() {
+        const modal = document.createElement('div');
+        modal.id = 'error-modal';
+        modal.className = 'error-modal';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; align-items: center;
+            justify-content: center; z-index: 10000;
+        `;
+        
+        modal.innerHTML = `
+            <div class="error-content" style="
+                background: white; padding: 30px; border-radius: 12px;
+                max-width: 500px; margin: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            ">
+                <h3 class="error-message" style="color: #d32f2f; margin: 0 0 15px 0;">Error</h3>
+                <p class="error-details" style="margin: 0 0 20px 0; line-height: 1.5;"></p>
+                <div style="text-align: right;">
+                    <button class="error-close-btn" style="
+                        background: #1976d2; color: white; border: none; padding: 10px 20px;
+                        border-radius: 6px; cursor: pointer; font-size: 16px;
+                    ">OK</button>
+                </div>
+            </div>
+        `;
+        
+        // Close button functionality
+        const closeBtn = modal.querySelector('.error-close-btn');
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
+        
+        // Close on background click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+        
+        document.body.appendChild(modal);
+        return modal;
     }
 
     /**
