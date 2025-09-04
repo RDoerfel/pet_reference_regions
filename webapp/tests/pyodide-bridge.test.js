@@ -14,15 +14,15 @@ const mockPyodide = {
 
 global.loadPyodide = jest.fn().mockResolvedValue(mockPyodide);
 
+// Import the class directly
+const PyodideBridge = require('../js/pyodide-bridge.js');
+
 describe('PyodideBridge', () => {
     let bridge;
 
     beforeEach(() => {
         jest.clearAllMocks();
-        
-        // Load the bridge module
-        require('../js/pyodide-bridge.js');
-        bridge = new window.PyodideBridge();
+        bridge = new PyodideBridge();
     });
 
     describe('Initialization', () => {

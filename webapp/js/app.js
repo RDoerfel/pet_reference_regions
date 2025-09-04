@@ -3,9 +3,27 @@
  * Coordinates file handling, processing pipeline, and UI interactions
  */
 class PETRefRegionApp {
-    constructor() {
-        this.pyodideBridge = new PyodideBridge();
-        this.visualization = new NiftiVisualization();
+    constructor(PyodideBridgeClass = null, NiftiVisualizationClass = null) {
+        // Handle dependency injection for testing
+        const PyodideBridgeConstructor = PyodideBridgeClass || 
+            (typeof PyodideBridge !== 'undefined' ? PyodideBridge : 
+             (typeof window !== 'undefined' && window.PyodideBridge ? window.PyodideBridge : 
+              (typeof require !== 'undefined' ? require('./pyodide-bridge.js') : null)));
+        
+        const NiftiVisualizationConstructor = NiftiVisualizationClass || 
+            (typeof NiftiVisualization !== 'undefined' ? NiftiVisualization : 
+             (typeof window !== 'undefined' && window.NiftiVisualization ? window.NiftiVisualization : 
+              (typeof require !== 'undefined' ? require('./visualization.js') : null)));
+        
+        if (!PyodideBridgeConstructor) {
+            throw new Error('PyodideBridge class not available');
+        }
+        if (!NiftiVisualizationConstructor) {
+            throw new Error('NiftiVisualization class not available');
+        }
+        
+        this.pyodideBridge = new PyodideBridgeConstructor();
+        this.visualization = new NiftiVisualizationConstructor();
         
         // Application state
         this.segmentationFile = null;

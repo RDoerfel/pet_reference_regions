@@ -51,8 +51,9 @@ describe('PETRefRegionApp', () => {
         PyodideBridge.mockImplementation(() => mockPyodideBridge);
         NiftiVisualization.mockImplementation(() => mockVisualization);
         
-        // Create app instance
-        app = new PETRefRegionApp();
+        // Load and create app instance with dependency injection
+        const PETRefRegionApp = require('../js/app.js');
+        app = new PETRefRegionApp(MockPyodideBridge, MockNiftiVisualization);
     });
 
     describe('Initialization', () => {

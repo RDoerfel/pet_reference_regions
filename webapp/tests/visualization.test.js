@@ -57,6 +57,9 @@ const mockElements = {
 
 document.getElementById = jest.fn((id) => mockElements[id]);
 
+// Import the class directly
+const NiftiVisualization = require('../js/visualization.js');
+
 describe('NiftiVisualization', () => {
     let visualization;
 
@@ -70,9 +73,7 @@ describe('NiftiVisualization', () => {
             }
         });
         
-        // Load the visualization module
-        require('../js/visualization.js');
-        visualization = new window.NiftiVisualization();
+        visualization = new NiftiVisualization();
     });
 
     describe('Initialization', () => {
