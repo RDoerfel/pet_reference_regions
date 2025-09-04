@@ -33,6 +33,12 @@ source = ["refregion"]
 
 [tool.black]
 line-length = 120
+extend-exclude = '''
+/(
+  webapp/node_modules
+  | webapp/coverage
+)/
+'''
 
 [tool.coverage.run]
 branch = true
