@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PET Reference Regions - WebAssembly Neuroimaging</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>PET Reference Regions</h1>
+            <p>Create reference regions from brain segmentation masks - fully client-side processing</p>
+        </header>
+
+        <main>
+            <!-- File Upload Section -->
+            <section id="upload-section" class="panel">
+                <h2>Input Files</h2>
+                <div class="upload-area" id="segmentation-upload">
+                    <div class="upload-content">
+                        <i class="upload-icon">📁</i>
+                        <p>Drop segmentation mask (.nii/.nii.gz)</p>
+                        <p class="file-info" id="seg-file-info"></p>
+                    </div>
+                    <input type="file" id="segmentation-input" accept=".nii,.nii.gz" hidden>
+                </div>
+                
+                <div class="upload-area optional" id="probability-upload">
+                    <div class="upload-content">
+                        <i class="upload-icon">📁</i>
+                        <p>Drop probability mask (optional)</p>
+                        <p class="file-info" id="prob-file-info"></p>
+                    </div>
+                    <input type="file" id="probability-input" accept=".nii,.nii.gz" hidden>
+                </div>
+            </section>
+
+            <!-- Parameters Section -->
+            <section id="parameters-section" class="panel" style="display: none;">
+                <h2>Processing Parameters</h2>
+                
+                <div class="param-group">
+                    <label for="reference-indices">Reference Indices (comma-separated):</label>
+                    <input type="text" id="reference-indices" placeholder="e.g., 4,7,15" value="7,8">
+                    <small>Anatomical regions to include in reference</small>
+                </div>
+
+                <div class="param-group">
+                    <label for="exclusion-indices">Exclusion Indices (optional):</label>
+                    <input type="text" id="exclusion-indices" placeholder="e.g., 2,8">
+                    <small>Regions to exclude from reference</small>
+                </div>
+
+                <div class="param-group">
+                    <label for="prob-threshold">Probability Threshold:</label>
+                    <input type="range" id="prob-threshold" min="0" max="1" step="0.1" value="0.5">
+                    <span id="prob-threshold-value">0.5</span>
+                    <small>Minimum probability for region inclusion</small>
+                </div>
+
+                <div class="param-group">
+                    <label for="erosion-size">Erosion Size (voxels):</label>
+                    <input type="number" id="erosion-size" min="0" max="10" value="1">
+                    <small>Morphological erosion on reference regions</small>
+                </div>
+
+                <div class="param-group">
+                    <label for="exclusion-dilation">Exclusion Dilation (voxels):</label>
+                    <input type="number" id="exclusion-dilation" min="0" max="10" value="2">
+                    <small>Morphological dilation on exclusion regions</small>
+                </div>
+
+                <button id="process-btn" class="primary-btn">Process Reference Regions</button>
+            </section>
+
+            <!-- Visualization Section -->
+            <section id="visualization-section" class="panel" style="display: none;">
+                <h2>3D Visualization</h2>
+                
+                <div class="viewer-controls">
+                    <div class="control-group">
+                        <label>Overlay Opacity:</label>
+                        <input type="range" id="overlay-opacity" min="0" max="1" step="0.1" value="0.7">
+                        <span id="opacity-value">0.7</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Show Overlays:</label>
+                        <label><input type="checkbox" id="show-reference" checked> Reference (Green)</label>
+                        <label><input type="checkbox" id="show-exclusion" checked> Exclusion (Red)</label>
+                        <label><input type="checkbox" id="show-probability" checked> Probability (Orange)</label>
+                    </div>
+                </div>
+
+                <div class="viewer-container">
+                    <!-- Axial View -->
+                    <div class="view-panel">
+                        <h3>Axial (Z-axis)</h3>
+                        <canvas id="axial-canvas" width="256" height="256"></canvas>
+                        <div class="slice-control">
+                            <input type="range" id="axial-slider" min="0" max="100" value="50">
+                            <span id="axial-slice-info">Slice: 50/100</span>
+                        </div>
+                    </div>
+
+                    <!-- Coronal View -->
+                    <div class="view-panel">
+                        <h3>Coronal (Y-axis)</h3>
+                        <canvas id="coronal-canvas" width="256" height="256"></canvas>
+                        <div class="slice-control">
+                            <input type="range" id="coronal-slider" min="0" max="100" value="50">
+                            <span id="coronal-slice-info">Slice: 50/100</span>
+                        </div>
+                    </div>
+
+                    <!-- Sagittal View -->
+                    <div class="view-panel">
+                        <h3>Sagittal (X-axis)</h3>
+                        <canvas id="sagittal-canvas" width="256" height="256"></canvas>
+                        <div class="slice-control">
+                            <input type="range" id="sagittal-slider" min="0" max="100" value="50">
+                            <span id="sagittal-slice-info">Slice: 50/100</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results-section" class="panel" style="display: none;">
+                <h2>Results</h2>
+                <div class="results-info">
+                    <p id="processing-summary"></p>
+                    <button id="download-btn" class="primary-btn">Download Reference Mask</button>
+                </div>
+            </section>
+        </main>
+
+        <!-- Status/Loading -->
+        <div id="status-overlay" class="overlay" style="display: none;">
+            <div class="status-content">
+                <div class="spinner"></div>
+                <p id="status-message">Initializing...</p>
+                <div id="progress-bar">
+                    <div id="progress-fill"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <script src="js/pyodide-bridge.js"></script>
+    <script src="js/visualization.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
