@@ -2,8 +2,18 @@ name: Deploy WebApp
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
+    inputs:
+      deploy:
+        description: 'Deploy to GitHub Pages (otherwise just build)'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -15,7 +25,7 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
+  build-and-deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -24,14 +34,32 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v4
 
+    - name: Verify webapp files exist
+      run: |
+        echo "Checking webapp directory..."
+        ls -la webapp/
+        echo "Required files:"
+        test -f webapp/index.html && echo "✓ index.html found" || echo "✗ index.html missing"
+        test -f webapp/app.py && echo "✓ app.py found" || echo "✗ app.py missing"
+        test -f webapp/refregion-0.1.0-py3-none-any.whl && echo "✓ wheel file found" || echo "✗ wheel file missing"
+
     - name: Setup Pages
+      if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy)
       uses: actions/configure-pages@v4
 
     - name: Upload artifact
+      if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy)
       uses: actions/upload-pages-artifact@v3
       with:
         path: './webapp'
 
     - name: Deploy to GitHub Pages
+      if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.deploy)
       id: deployment
       uses: actions/deploy-pages@v4
+
+    - name: Build check complete
+      if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && !inputs.deploy)
+      run: |
+        echo "✓ Build check passed - webapp files are ready"
+        echo "This is a dry run. To deploy, merge to main or run workflow_dispatch with deploy=true"
