@@ -23,8 +23,6 @@ class DataStore:
         self.mask_img = None
         self.mask_data = None
         self.mask_original = None
-        self.prob_img = None
-        self.prob_data = None
         self.processed_mask = None
         self.available_indices = []
         self.mask_indices = []
@@ -105,17 +103,6 @@ async def on_mask_load(event):
         render_all_views()
     except Exception as e:
         update_status('load-status', f'Error loading mask: {str(e)}', 'error')
-        console.error(str(e))
-
-
-async def on_prob_load(event):
-    """Handle probability mask loading"""
-    try:
-        update_status('load-status', 'Loading probability mask...', 'info')
-        store.prob_img, store.prob_data = await load_nifti_file(event.target)
-        update_status('load-status', f'Probability mask loaded: {store.prob_data.shape}', 'success')
-    except Exception as e:
-        update_status('load-status', f'Error loading probability: {str(e)}', 'error')
         console.error(str(e))
 
 
@@ -324,7 +311,6 @@ def apply_operations(event):
 
         erosion_radius = int(document.getElementById('erosion-radius').value)
         dilation_radius = int(document.getElementById('dilation-radius').value)
-        prob_threshold = float(document.getElementById('prob-threshold').value)
 
         result_mask = np.zeros_like(store.mask_original)
 
@@ -334,9 +320,6 @@ def apply_operations(event):
 
             if erosion_radius > 0:
                 region_mask = morphology.erode(region_mask, erosion_radius)
-
-            if store.prob_data is not None:
-                region_mask = morphology.apply_probability_mask(region_mask, store.prob_data, prob_threshold)
 
             result_mask[region_mask > 0] = idx
 
@@ -406,7 +389,6 @@ def setup_listeners():
     """Set up all event listeners"""
     document.getElementById('t1-file').addEventListener('change', create_proxy(on_t1_load))
     document.getElementById('mask-file').addEventListener('change', create_proxy(on_mask_load))
-    document.getElementById('prob-file').addEventListener('change', create_proxy(on_prob_load))
 
     document.getElementById('slider-x').addEventListener('input', create_proxy(on_slider_change))
     document.getElementById('slider-y').addEventListener('input', create_proxy(on_slider_change))
