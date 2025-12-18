@@ -27,6 +27,8 @@ class DataStore:
         self.prob_data = None
         self.processed_mask = None
         self.available_indices = []
+        self.mask_indices = []
+        self.exclusion_indices = []
 
 
 store = DataStore()
@@ -88,9 +90,13 @@ async def on_mask_load(event):
         indices_span = document.getElementById('available-indices')
         indices_span.textContent = ', '.join(str(idx) for idx in store.available_indices)
 
-        # Pre-fill the input with all available indices
-        input_field = document.getElementById('selected-indices-input')
-        input_field.value = ', '.join(str(idx) for idx in store.available_indices)
+        # Pre-fill the mask input with all available indices
+        mask_input = document.getElementById('mask-indices-input')
+        mask_input.value = ', '.join(str(idx) for idx in store.available_indices)
+
+        # Leave exclusion input empty by default
+        exclusion_input = document.getElementById('exclusion-indices-input')
+        exclusion_input.value = ''
 
         update_status('load-status', f'Mask loaded: {store.mask_data.shape}, {len(store.available_indices)} regions', 'success')
         document.getElementById('apply-btn').disabled = False
@@ -266,7 +272,7 @@ def on_slider_change(event):
 
 
 def apply_operations(event):
-    """Apply morphology operations to selected mask regions"""
+    """Apply morphology operations to selected mask and exclusion regions"""
     if store.mask_original is None:
         update_status('load-status', 'Please load a mask first', 'error')
         return
@@ -274,31 +280,46 @@ def apply_operations(event):
     try:
         update_status('load-status', 'Applying morphology operations...', 'info')
 
-        # Parse selected indices from text input
-        input_field = document.getElementById('selected-indices-input')
-        input_text = input_field.value.strip()
+        # Parse mask indices from text input
+        mask_input = document.getElementById('mask-indices-input')
+        mask_text = mask_input.value.strip()
 
-        if input_text:
-            # Parse comma-separated values
-            selected_indices = []
-            for part in input_text.split(','):
+        mask_indices = []
+        if mask_text:
+            for part in mask_text.split(','):
                 part = part.strip()
                 if part:
                     try:
                         idx = int(part)
                         if idx in store.available_indices:
-                            selected_indices.append(idx)
+                            mask_indices.append(idx)
                         else:
-                            update_status('load-status', f'Warning: Index {idx} not found in mask. Ignoring.', 'error')
+                            update_status('load-status', f'Warning: Mask index {idx} not found in mask. Ignoring.', 'error')
                     except ValueError:
-                        update_status('load-status', f'Invalid index: "{part}". Please enter numbers only.', 'error')
+                        update_status('load-status', f'Invalid mask index: "{part}". Please enter numbers only.', 'error')
                         return
-        else:
-            # If empty, use all available indices
-            selected_indices = store.available_indices
 
-        if not selected_indices:
-            update_status('load-status', 'No valid indices selected', 'error')
+        # Parse exclusion indices from text input
+        exclusion_input = document.getElementById('exclusion-indices-input')
+        exclusion_text = exclusion_input.value.strip()
+
+        exclusion_indices = []
+        if exclusion_text:
+            for part in exclusion_text.split(','):
+                part = part.strip()
+                if part:
+                    try:
+                        idx = int(part)
+                        if idx in store.available_indices:
+                            exclusion_indices.append(idx)
+                        else:
+                            update_status('load-status', f'Warning: Exclusion index {idx} not found in mask. Ignoring.', 'error')
+                    except ValueError:
+                        update_status('load-status', f'Invalid exclusion index: "{part}". Please enter numbers only.', 'error')
+                        return
+
+        if not mask_indices and not exclusion_indices:
+            update_status('load-status', 'Please select at least one mask or exclusion index', 'error')
             return
 
         erosion_radius = int(document.getElementById('erosion-radius').value)
@@ -307,24 +328,35 @@ def apply_operations(event):
 
         result_mask = np.zeros_like(store.mask_original)
 
-        for idx in selected_indices:
+        # Process mask indices with erosion
+        for idx in mask_indices:
             region_mask = (store.mask_original == idx).astype(float)
 
             if erosion_radius > 0:
                 region_mask = morphology.erode(region_mask, erosion_radius)
-
-            if dilation_radius > 0:
-                region_mask = morphology.dilate(region_mask, dilation_radius)
 
             if store.prob_data is not None:
                 region_mask = morphology.apply_probability_mask(region_mask, store.prob_data, prob_threshold)
 
             result_mask[region_mask > 0] = idx
 
+        # Process exclusion indices with dilation, then subtract from result
+        exclusion_mask = np.zeros_like(store.mask_original)
+        for idx in exclusion_indices:
+            region_mask = (store.mask_original == idx).astype(float)
+
+            if dilation_radius > 0:
+                region_mask = morphology.dilate(region_mask, dilation_radius)
+
+            exclusion_mask[region_mask > 0] = 1
+
+        # Remove exclusion regions from result mask
+        result_mask[exclusion_mask > 0] = 0
+
         store.processed_mask = result_mask
         document.getElementById('save-btn').disabled = False
 
-        update_status('load-status', f'Operations applied successfully to {len(selected_indices)} region(s)', 'success')
+        update_status('load-status', f'Operations applied: {len(mask_indices)} mask region(s), {len(exclusion_indices)} exclusion region(s)', 'success')
         render_all_views()
 
     except Exception as e:
