@@ -194,7 +194,6 @@ def render_slice(canvas_id, slice_data, mask_slice=None, rotation=1):
     if mask_slice is not None:
         mask_slice = np.rot90(mask_slice, k=rotation)
         mask_overlay = mask_slice > 0
-        rgba_data[mask_overlay, 0] = np.minimum(rgba_data[mask_overlay, 0] + 100, 255)
         rgba_data[mask_overlay, 1] = np.maximum(rgba_data[mask_overlay, 1] - 50, 0)
 
     # Set canvas to actual pixel size to avoid CSS scaling artifacts
