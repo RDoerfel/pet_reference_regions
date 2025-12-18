@@ -28,3 +28,16 @@ def erode(mask: np.ndarray, by_radius: int) -> np.ndarray:
 
     eroded_mask = morphology.binary_erosion(mask, morphology.ball(by_radius))
     return _clip(eroded_mask)
+
+
+def apply_probability_mask(mask: np.ndarray, probability_map: np.ndarray, probability_threshold: float) -> np.ndarray:
+    """Apply a probability mask to a binary mask.
+    Args:
+        mask (np.ndarray): 3D binary mask
+        probability (float): Probability to keep a voxel in the mask
+    Returns:
+        np.ndarray: Mask after applying the probability mask
+    """
+    probability_map_mask = probability_map >= probability_threshold
+    masked = mask * probability_map_mask
+    return _clip(masked)
