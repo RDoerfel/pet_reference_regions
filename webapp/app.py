@@ -362,23 +362,39 @@ def save_mask(event):
         return
 
     try:
+        # Get filename from input field
+        filename_input = document.getElementById('save-filename')
+        filename = filename_input.value.strip()
+
+        if not filename:
+            update_status('save-status', 'Please enter a filename', 'error')
+            return
+
+        # Ensure filename has .nii.gz extension
+        if not filename.endswith('.nii.gz') and not filename.endswith('.nii'):
+            filename = filename + '.nii.gz'
+
         update_status('save-status', 'Preparing download...', 'info')
 
         new_img = nib.Nifti1Image(store.processed_mask, store.mask_img.affine, store.mask_img.header)
 
-        bytes_io = io.BytesIO()
-        nib.save(new_img, bytes_io)
-        bytes_data = bytes_io.getvalue()
+        # Save to temporary file in Pyodide's virtual filesystem
+        temp_path = '/tmp/processed_mask.nii.gz'
+        nib.save(new_img, temp_path)
+
+        # Read the file back as bytes
+        with open(temp_path, 'rb') as f:
+            bytes_data = f.read()
 
         base64_data = base64.b64encode(bytes_data).decode('utf-8')
         data_url = f'data:application/octet-stream;base64,{base64_data}'
 
         link = document.createElement('a')
         link.href = data_url
-        link.download = 'processed_mask.nii.gz'
+        link.download = filename
         link.click()
 
-        update_status('save-status', 'Mask downloaded successfully', 'success')
+        update_status('save-status', f'Mask downloaded successfully as {filename}', 'success')
 
     except Exception as e:
         update_status('save-status', f'Error saving: {str(e)}', 'error')
