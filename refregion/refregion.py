@@ -35,9 +35,7 @@ def custom_ref_region(
 
     # Apply probability mask if provided
     if probability_mask is not None and probability_threshold is not None:
-        refregion = morphology.apply_probability_mask(
-            refregion, probability_mask, probability_threshold
-        )
+        refregion = morphology.apply_probability_mask(refregion, probability_mask, probability_threshold)
 
     # Erode the reference region
     refregion = morphology.erode(refregion, erode_by_voxels)
@@ -49,5 +47,5 @@ def custom_ref_region(
 
     # Remove excluded areas from the reference region
     refregion = refregion - exclude_mask
-    
+
     return morphology._clip(refregion)
