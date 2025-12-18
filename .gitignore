@@ -166,3 +166,6 @@ cython_debug/
 
 # poetry
 poetry.lock
+
+# Claude
+.claude/
