@@ -26,7 +26,7 @@ class DataStore:
         self.prob_img = None
         self.prob_data = None
         self.processed_mask = None
-        self.selected_indices = set()
+        self.available_indices = []
 
 
 store = DataStore()
@@ -82,33 +82,17 @@ async def on_mask_load(event):
 
         unique_indices = np.unique(store.mask_data)
         unique_indices = unique_indices[unique_indices > 0]
+        store.available_indices = [int(idx) for idx in unique_indices]
 
-        container = document.getElementById('mask-indices')
-        container.innerHTML = ''
+        # Display available indices
+        indices_span = document.getElementById('available-indices')
+        indices_span.textContent = ', '.join(str(idx) for idx in store.available_indices)
 
-        for idx in unique_indices:
-            idx_int = int(idx)
-            item_div = document.createElement('div')
-            item_div.className = 'mask-index-item'
+        # Pre-fill the input with all available indices
+        input_field = document.getElementById('selected-indices-input')
+        input_field.value = ', '.join(str(idx) for idx in store.available_indices)
 
-            checkbox = document.createElement('input')
-            checkbox.type = 'checkbox'
-            checkbox.id = f'mask-idx-{idx_int}'
-            checkbox.value = str(idx_int)
-            checkbox.checked = True
-            store.selected_indices.add(idx_int)
-            checkbox.addEventListener('change', create_proxy(on_index_change))
-
-            label = document.createElement('label')
-            label.htmlFor = f'mask-idx-{idx_int}'
-            label.textContent = f'Region {idx_int}'
-            label.style.cursor = 'pointer'
-
-            item_div.appendChild(checkbox)
-            item_div.appendChild(label)
-            container.appendChild(item_div)
-
-        update_status('load-status', f'Mask loaded: {store.mask_data.shape}, {len(unique_indices)} regions', 'success')
+        update_status('load-status', f'Mask loaded: {store.mask_data.shape}, {len(store.available_indices)} regions', 'success')
         document.getElementById('apply-btn').disabled = False
         document.getElementById('reset-btn').disabled = False
         update_sliders()
@@ -127,15 +111,6 @@ async def on_prob_load(event):
     except Exception as e:
         update_status('load-status', f'Error loading probability: {str(e)}', 'error')
         console.error(str(e))
-
-
-def on_index_change(event):
-    """Handle mask index checkbox changes"""
-    idx = int(event.target.value)
-    if event.target.checked:
-        store.selected_indices.add(idx)
-    else:
-        store.selected_indices.discard(idx)
 
 
 def update_status(element_id, message, status_type='info'):
@@ -299,13 +274,40 @@ def apply_operations(event):
     try:
         update_status('load-status', 'Applying morphology operations...', 'info')
 
+        # Parse selected indices from text input
+        input_field = document.getElementById('selected-indices-input')
+        input_text = input_field.value.strip()
+
+        if input_text:
+            # Parse comma-separated values
+            selected_indices = []
+            for part in input_text.split(','):
+                part = part.strip()
+                if part:
+                    try:
+                        idx = int(part)
+                        if idx in store.available_indices:
+                            selected_indices.append(idx)
+                        else:
+                            update_status('load-status', f'Warning: Index {idx} not found in mask. Ignoring.', 'error')
+                    except ValueError:
+                        update_status('load-status', f'Invalid index: "{part}". Please enter numbers only.', 'error')
+                        return
+        else:
+            # If empty, use all available indices
+            selected_indices = store.available_indices
+
+        if not selected_indices:
+            update_status('load-status', 'No valid indices selected', 'error')
+            return
+
         erosion_radius = int(document.getElementById('erosion-radius').value)
         dilation_radius = int(document.getElementById('dilation-radius').value)
         prob_threshold = float(document.getElementById('prob-threshold').value)
 
         result_mask = np.zeros_like(store.mask_original)
 
-        for idx in store.selected_indices:
+        for idx in selected_indices:
             region_mask = (store.mask_original == idx).astype(float)
 
             if erosion_radius > 0:
@@ -322,7 +324,7 @@ def apply_operations(event):
         store.processed_mask = result_mask
         document.getElementById('save-btn').disabled = False
 
-        update_status('load-status', 'Operations applied successfully', 'success')
+        update_status('load-status', f'Operations applied successfully to {len(selected_indices)} region(s)', 'success')
         render_all_views()
 
     except Exception as e:
