@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PET Reference Region Editor</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+            border-bottom: 3px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .section h2 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .file-input-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .file-input-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .file-input-item label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        input[type="file"]:hover {
+            border-color: #4CAF50;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        input[type="number"], input[type="range"], select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        input[type="range"] {
+            padding: 0;
+        }
+
+        .slider-value {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: background 0.3s;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #45a049;
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .visualization {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .plane-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .plane-view h3 {
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 16px;
+        }
+
+        canvas {
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            max-width: 100%;
+            height: auto;
+            background: #000;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+
+        .slider-container {
+            width: 100%;
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+        }
+
+        #mask-indices {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            max-height: 150px;
+            overflow-y: auto;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .mask-index-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: #f0f0f0;
+            border-radius: 3px;
+        }
+
+        .mask-index-item input[type="checkbox"] {
+            cursor: pointer;
+        }
+
+        .status {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border: 1px solid #90caf9;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #81c784;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ef5350;
+        }
+
+        #loading {
+            display: block;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>PET Reference Region Morphology Editor</h1>
+
+        <div id="loading">
+            <div class="spinner"></div>
+            <p>Loading Python packages (this may take a minute)...</p>
+        </div>
+
+        <div id="main-content" style="display: none;">
+            <div class="section">
+                <h2>1. Load Images</h2>
+                <div class="file-input-group">
+                    <div class="file-input-item">
+                        <label for="t1-file">T1w Image (NIfTI/MGZ):</label>
+                        <input type="file" id="t1-file" accept=".nii,.nii.gz,.mgz">
+                    </div>
+                    <div class="file-input-item">
+                        <label for="mask-file">Segmentation Mask (NIfTI/MGZ):</label>
+                        <input type="file" id="mask-file" accept=".nii,.nii.gz,.mgz">
+                    </div>
+                    <div class="file-input-item">
+                        <label for="prob-file">Probability Mask (Optional, NIfTI/MGZ):</label>
+                        <input type="file" id="prob-file" accept=".nii,.nii.gz,.mgz">
+                    </div>
+                </div>
+                <div id="load-status"></div>
+            </div>
+
+            <div class="section">
+                <h2>2. Select Mask Indices</h2>
+                <p style="color: #666; margin-bottom: 10px; font-size: 14px;">Select which mask regions to process:</p>
+                <div id="mask-indices">
+                    <p style="color: #999;">Load a mask file to see available indices</p>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>3. Morphology Operations</h2>
+                <div class="controls">
+                    <div class="control-group">
+                        <label for="erosion-radius">Erosion Radius (voxels):</label>
+                        <input type="number" id="erosion-radius" value="0" min="0" max="10" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label for="dilation-radius">Dilation Radius (voxels):</label>
+                        <input type="number" id="dilation-radius" value="0" min="0" max="10" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label for="prob-threshold">Probability Threshold:</label>
+                        <input type="number" id="prob-threshold" value="0.5" min="0" max="1" step="0.01">
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button id="apply-btn" disabled>Apply Operations</button>
+                    <button id="reset-btn" disabled>Reset to Original</button>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>4. Visualization</h2>
+                <div class="visualization">
+                    <div class="plane-view">
+                        <h3>Coronal (Z)</h3>
+                        <canvas id="canvas-axial" width="256" height="256"></canvas>
+                        <div class="slider-container">
+                            <input type="range" id="slider-z" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-z">50</span>
+                        </div>
+                    </div>
+                    <div class="plane-view">
+                        <h3>Axial (Y)</h3>
+                        <canvas id="canvas-coronal" width="256" height="256"></canvas>
+                        <div class="slider-container">
+                            <input type="range" id="slider-y" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-y">50</span>
+                        </div>
+                    </div>
+                    <div class="plane-view">
+                        <h3>Sagittal (X)</h3>
+                        <canvas id="canvas-sagittal" width="256" height="256"></canvas>
+                        <div class="slider-container">
+                            <input type="range" id="slider-x" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-x">50</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>5. Save Processed Mask</h2>
+                <button id="save-btn" disabled>Download Processed Mask</button>
+                <div id="save-status"></div>
+            </div>
+        </div>
+    </div>
+
+    <script type="py" src="./app.py" config='{"packages": ["numpy", "nibabel", "scikit-image"]}'></script>
+</body>
+</html>
