@@ -81,7 +81,6 @@ async def on_mask_load(event):
         store.processed_mask = None
 
         unique_indices = np.unique(store.mask_data)
-        unique_indices = unique_indices[unique_indices > 0]
         store.available_indices = [int(idx) for idx in unique_indices]
 
         # Display available indices
@@ -90,7 +89,7 @@ async def on_mask_load(event):
 
         # Pre-fill the mask input with all available indices
         mask_input = document.getElementById('mask-indices-input')
-        mask_input.value = ', '.join(str(idx) for idx in store.available_indices)
+        mask_input.value = ''
 
         # Leave exclusion input empty by default
         exclusion_input = document.getElementById('exclusion-indices-input')
