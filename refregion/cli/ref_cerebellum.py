@@ -29,11 +29,16 @@ def main():
     )
     args = parser.parse_args()
 
-    cerebellum_reference_region(
+    result_metrics = cerebellum_reference_region(
         args.cerebellum,
         args.brain,
         args.output,
     )
+
+    print("Morphometrics:")
+    print(f"  Voxel count:           {result_metrics['voxel_count']}")
+    print(f"  Volume (mm3):          {result_metrics['volume_mm3']:.2f}")
+    print(f"  Retention (%):         {result_metrics['retention_percentage']:.2f}")
 
 
 if __name__ == "__main__":

@@ -15,6 +15,7 @@ render_timer = None
 
 class DataStore:
     """Global data storage for the application"""
+
     def __init__(self):
         self.t1_img = None
         self.t1_data = None
@@ -45,8 +46,8 @@ async def load_nifti_file(file_input):
 
     # Write to Pyodide's in-memory virtual filesystem
     # Note: This filesystem only exists in browser RAM, nothing is written to disk
-    temp_path = f'/tmp/{filename}'
-    with open(temp_path, 'wb') as f:
+    temp_path = f"/tmp/{filename}"
+    with open(temp_path, "wb") as f:
         f.write(bytes_data)
 
     # Load with nibabel from the path
@@ -59,23 +60,23 @@ async def load_nifti_file(file_input):
 async def on_t1_load(event):
     """Handle T1 image loading"""
     try:
-        update_status('load-status', 'Loading T1 image...', 'info')
+        update_status("load-status", "Loading T1 image...", "info")
         store.t1_img, store.t1_data = await load_nifti_file(event.target)
         # Cache intensity range for faster rendering
         store.t1_min = float(store.t1_data.min())
         store.t1_max = float(store.t1_data.max())
-        update_status('load-status', f'T1 loaded: {store.t1_data.shape}', 'success')
+        update_status("load-status", f"T1 loaded: {store.t1_data.shape}", "success")
         update_sliders()
         render_all_views()
     except Exception as e:
-        update_status('load-status', f'Error loading T1: {str(e)}', 'error')
+        update_status("load-status", f"Error loading T1: {str(e)}", "error")
         console.error(str(e))
 
 
 async def on_mask_load(event):
     """Handle mask loading"""
     try:
-        update_status('load-status', 'Loading mask...', 'info')
+        update_status("load-status", "Loading mask...", "info")
         store.mask_img, store.mask_data = await load_nifti_file(event.target)
         store.mask_original = store.mask_data.copy()
         store.processed_mask = None
@@ -84,28 +85,30 @@ async def on_mask_load(event):
         store.available_indices = [int(idx) for idx in unique_indices]
 
         # Display available indices
-        indices_span = document.getElementById('available-indices')
-        indices_span.textContent = ', '.join(str(idx) for idx in store.available_indices)
+        indices_span = document.getElementById("available-indices")
+        indices_span.textContent = ", ".join(str(idx) for idx in store.available_indices)
 
         # Pre-fill the mask input with all available indices
-        mask_input = document.getElementById('mask-indices-input')
-        mask_input.value = ''
+        mask_input = document.getElementById("mask-indices-input")
+        mask_input.value = ""
 
         # Leave exclusion input empty by default
-        exclusion_input = document.getElementById('exclusion-indices-input')
-        exclusion_input.value = ''
+        exclusion_input = document.getElementById("exclusion-indices-input")
+        exclusion_input.value = ""
 
-        update_status('load-status', f'Mask loaded: {store.mask_data.shape}, {len(store.available_indices)} regions', 'success')
-        document.getElementById('apply-btn').disabled = False
-        document.getElementById('reset-btn').disabled = False
+        update_status(
+            "load-status", f"Mask loaded: {store.mask_data.shape}, {len(store.available_indices)} regions", "success"
+        )
+        document.getElementById("apply-btn").disabled = False
+        document.getElementById("reset-btn").disabled = False
         update_sliders()
         render_all_views()
     except Exception as e:
-        update_status('load-status', f'Error loading mask: {str(e)}', 'error')
+        update_status("load-status", f"Error loading mask: {str(e)}", "error")
         console.error(str(e))
 
 
-def update_status(element_id, message, status_type='info'):
+def update_status(element_id, message, status_type="info"):
     """Update a status message element"""
     status_div = document.getElementById(element_id)
     status_div.innerHTML = f'<div class="status {status_type}">{message}</div>'
@@ -116,20 +119,20 @@ def update_sliders():
     if store.t1_data is not None:
         shape = store.t1_data.shape
 
-        slider_x = document.getElementById('slider-x')
+        slider_x = document.getElementById("slider-x")
         slider_x.max = str(shape[0] - 1)
         slider_x.value = str(shape[0] // 2)
-        document.getElementById('value-x').textContent = str(shape[0] // 2)
+        document.getElementById("value-x").textContent = str(shape[0] // 2)
 
-        slider_y = document.getElementById('slider-y')
+        slider_y = document.getElementById("slider-y")
         slider_y.max = str(shape[1] - 1)
         slider_y.value = str(shape[1] // 2)
-        document.getElementById('value-y').textContent = str(shape[1] // 2)
+        document.getElementById("value-y").textContent = str(shape[1] // 2)
 
-        slider_z = document.getElementById('slider-z')
+        slider_z = document.getElementById("slider-z")
         slider_z.max = str(shape[2] - 1)
         slider_z.value = str(shape[2] // 2)
-        document.getElementById('value-z').textContent = str(shape[2] // 2)
+        document.getElementById("value-z").textContent = str(shape[2] // 2)
 
 
 def normalize_slice(slice_data):
@@ -159,7 +162,7 @@ def render_slice(canvas_id, slice_data, mask_slice=None, rotation=1):
         rotation: Number of 90-degree rotations (0-3)
     """
     canvas = document.getElementById(canvas_id)
-    ctx = canvas.getContext('2d')
+    ctx = canvas.getContext("2d")
 
     # Downsample if image is too large for performance
     max_size = 512
@@ -188,7 +191,7 @@ def render_slice(canvas_id, slice_data, mask_slice=None, rotation=1):
     rgba_data[:, :, 0] = img_data  # R
     rgba_data[:, :, 1] = img_data  # G
     rgba_data[:, :, 2] = img_data  # B
-    rgba_data[:, :, 3] = 255       # A
+    rgba_data[:, :, 3] = 255  # A
 
     if mask_slice is not None:
         mask_slice = np.rot90(mask_slice, k=rotation)
@@ -214,25 +217,34 @@ def render_all_views():
     if store.t1_data is None:
         return
 
-    x = int(document.getElementById('slider-x').value)
-    y = int(document.getElementById('slider-y').value)
-    z = int(document.getElementById('slider-z').value)
+    x = int(document.getElementById("slider-x").value)
+    y = int(document.getElementById("slider-y").value)
+    z = int(document.getElementById("slider-z").value)
 
     mask_to_display = store.processed_mask if store.processed_mask is not None else store.mask_data
 
     # Each view needs different orientation
     # Axial: transverse slice (z)
-    render_slice('canvas-axial', store.t1_data[:, :, z],
-               mask_to_display[:, :, z] if mask_to_display is not None else None,
-               rotation=3)  # 270 degrees (90 counter-clockwise)
+    render_slice(
+        "canvas-axial",
+        store.t1_data[:, :, z],
+        mask_to_display[:, :, z] if mask_to_display is not None else None,
+        rotation=3,
+    )  # 270 degrees (90 counter-clockwise)
     # Coronal: front-to-back slice (y)
-    render_slice('canvas-coronal', store.t1_data[:, y, :],
-               mask_to_display[:, y, :] if mask_to_display is not None else None,
-               rotation=1)  # 90 degrees counter-clockwise
+    render_slice(
+        "canvas-coronal",
+        store.t1_data[:, y, :],
+        mask_to_display[:, y, :] if mask_to_display is not None else None,
+        rotation=1,
+    )  # 90 degrees counter-clockwise
     # Sagittal: left-to-right slice (x)
-    render_slice('canvas-sagittal', store.t1_data[x, :, :],
-               mask_to_display[x, :, :] if mask_to_display is not None else None,
-               rotation=0)  # No rotation
+    render_slice(
+        "canvas-sagittal",
+        store.t1_data[x, :, :],
+        mask_to_display[x, :, :] if mask_to_display is not None else None,
+        rotation=0,
+    )  # No rotation
 
 
 def on_slider_change(event):
@@ -242,12 +254,12 @@ def on_slider_change(event):
     slider_id = event.target.id
     value = event.target.value
 
-    if slider_id == 'slider-x':
-        document.getElementById('value-x').textContent = value
-    elif slider_id == 'slider-y':
-        document.getElementById('value-y').textContent = value
-    elif slider_id == 'slider-z':
-        document.getElementById('value-z').textContent = value
+    if slider_id == "slider-x":
+        document.getElementById("value-x").textContent = value
+    elif slider_id == "slider-y":
+        document.getElementById("value-y").textContent = value
+    elif slider_id == "slider-z":
+        document.getElementById("value-z").textContent = value
 
     # Debounce rendering - only render after user stops moving slider
     if render_timer is not None:
@@ -256,22 +268,53 @@ def on_slider_change(event):
     render_timer = window.setTimeout(create_proxy(lambda: render_all_views()), 16)
 
 
+def update_morphometrics(mask_indices, processed_mask):
+    """Compute and display morphometrics in the UI."""
+    # Original selection: all voxels matching selected mask indices
+    original_mask = np.isin(store.mask_original, mask_indices).astype(np.uint8)
+
+    original_count = int(np.count_nonzero(original_mask))
+    processed_count = int(np.count_nonzero(processed_mask))
+
+    # Compute voxel volume from header
+    if store.mask_img is not None:
+        zooms = store.mask_img.header.get_zooms()[:3]
+        voxel_vol = float(np.prod(zooms))
+    else:
+        voxel_vol = 1.0
+
+    volume = processed_count * voxel_vol
+    retention = (processed_count / original_count * 100) if original_count > 0 else 0.0
+
+    container = document.getElementById("morphometrics-container")
+    container.innerHTML = (
+        f'<table style="border-collapse: collapse;">'
+        f'<tr><td style="padding: 4px 16px 4px 0; font-weight: 600;">Voxel count:</td>'
+        f'<td style="padding: 4px 0;">{processed_count}</td></tr>'
+        f'<tr><td style="padding: 4px 16px 4px 0; font-weight: 600;">Volume (mm3):</td>'
+        f'<td style="padding: 4px 0;">{volume:.2f}</td></tr>'
+        f'<tr><td style="padding: 4px 16px 4px 0; font-weight: 600;">Retention (%):</td>'
+        f'<td style="padding: 4px 0;">{retention:.2f}</td></tr>'
+        f"</table>"
+    )
+
+
 def apply_operations(event):
     """Apply morphology operations to selected mask and exclusion regions"""
     if store.mask_original is None:
-        update_status('load-status', 'Please load a mask first', 'error')
+        update_status("load-status", "Please load a mask first", "error")
         return
 
     try:
-        update_status('load-status', 'Applying morphology operations...', 'info')
+        update_status("load-status", "Applying morphology operations...", "info")
 
         # Parse mask indices from text input
-        mask_input = document.getElementById('mask-indices-input')
+        mask_input = document.getElementById("mask-indices-input")
         mask_text = mask_input.value.strip()
 
         mask_indices = []
         if mask_text:
-            for part in mask_text.split(','):
+            for part in mask_text.split(","):
                 part = part.strip()
                 if part:
                     try:
@@ -279,18 +322,22 @@ def apply_operations(event):
                         if idx in store.available_indices:
                             mask_indices.append(idx)
                         else:
-                            update_status('load-status', f'Warning: Mask index {idx} not found in mask. Ignoring.', 'error')
+                            update_status(
+                                "load-status", f"Warning: Mask index {idx} not found in mask. Ignoring.", "error"
+                            )
                     except ValueError:
-                        update_status('load-status', f'Invalid mask index: "{part}". Please enter numbers only.', 'error')
+                        update_status(
+                            "load-status", f'Invalid mask index: "{part}". Please enter numbers only.', "error"
+                        )
                         return
 
         # Parse exclusion indices from text input
-        exclusion_input = document.getElementById('exclusion-indices-input')
+        exclusion_input = document.getElementById("exclusion-indices-input")
         exclusion_text = exclusion_input.value.strip()
 
         exclusion_indices = []
         if exclusion_text:
-            for part in exclusion_text.split(','):
+            for part in exclusion_text.split(","):
                 part = part.strip()
                 if part:
                     try:
@@ -298,17 +345,21 @@ def apply_operations(event):
                         if idx in store.available_indices:
                             exclusion_indices.append(idx)
                         else:
-                            update_status('load-status', f'Warning: Exclusion index {idx} not found in mask. Ignoring.', 'error')
+                            update_status(
+                                "load-status", f"Warning: Exclusion index {idx} not found in mask. Ignoring.", "error"
+                            )
                     except ValueError:
-                        update_status('load-status', f'Invalid exclusion index: "{part}". Please enter numbers only.', 'error')
+                        update_status(
+                            "load-status", f'Invalid exclusion index: "{part}". Please enter numbers only.', "error"
+                        )
                         return
 
         if not mask_indices and not exclusion_indices:
-            update_status('load-status', 'Please select at least one mask or exclusion index', 'error')
+            update_status("load-status", "Please select at least one mask or exclusion index", "error")
             return
 
-        erosion_radius = int(document.getElementById('erosion-radius').value)
-        dilation_radius = int(document.getElementById('dilation-radius').value)
+        erosion_radius = int(document.getElementById("erosion-radius").value)
+        dilation_radius = int(document.getElementById("dilation-radius").value)
 
         result_mask = np.zeros_like(store.mask_original)
 
@@ -335,84 +386,93 @@ def apply_operations(event):
         result_mask[exclusion_mask > 0] = 0
 
         store.processed_mask = result_mask
-        document.getElementById('save-btn').disabled = False
+        document.getElementById("save-btn").disabled = False
 
-        update_status('load-status', f'Operations applied: {len(mask_indices)} mask region(s), {len(exclusion_indices)} exclusion region(s)', 'success')
+        # Compute and display morphometrics
+        update_morphometrics(mask_indices, result_mask)
+
+        update_status(
+            "load-status",
+            f"Operations applied: {len(mask_indices)} mask region(s), {len(exclusion_indices)} exclusion region(s)",
+            "success",
+        )
         render_all_views()
 
     except Exception as e:
-        update_status('load-status', f'Error: {str(e)}', 'error')
+        update_status("load-status", f"Error: {str(e)}", "error")
         console.error(str(e))
 
 
 def reset_mask(event):
     """Reset mask to original state"""
     store.processed_mask = None
-    document.getElementById('save-btn').disabled = True
-    update_status('load-status', 'Mask reset to original', 'info')
+    document.getElementById("save-btn").disabled = True
+    container = document.getElementById("morphometrics-container")
+    container.innerHTML = "Apply operations to see morphometrics."
+    update_status("load-status", "Mask reset to original", "info")
     render_all_views()
 
 
 def save_mask(event):
     """Save the processed mask as a NIfTI file"""
     if store.processed_mask is None or store.mask_img is None:
-        update_status('save-status', 'No processed mask to save', 'error')
+        update_status("save-status", "No processed mask to save", "error")
         return
 
     try:
         # Get filename from input field
-        filename_input = document.getElementById('save-filename')
+        filename_input = document.getElementById("save-filename")
         filename = filename_input.value.strip()
 
         if not filename:
-            update_status('save-status', 'Please enter a filename', 'error')
+            update_status("save-status", "Please enter a filename", "error")
             return
 
         # Ensure filename has .nii.gz extension
-        if not filename.endswith('.nii.gz') and not filename.endswith('.nii'):
-            filename = filename + '.nii.gz'
+        if not filename.endswith(".nii.gz") and not filename.endswith(".nii"):
+            filename = filename + ".nii.gz"
 
-        update_status('save-status', 'Preparing download...', 'info')
+        update_status("save-status", "Preparing download...", "info")
 
         new_img = nib.Nifti1Image(store.processed_mask, store.mask_img.affine, store.mask_img.header)
 
         # Save to temporary file in Pyodide's virtual filesystem
-        temp_path = '/tmp/processed_mask.nii.gz'
+        temp_path = "/tmp/processed_mask.nii.gz"
         nib.save(new_img, temp_path)
 
         # Read the file back as bytes
-        with open(temp_path, 'rb') as f:
+        with open(temp_path, "rb") as f:
             bytes_data = f.read()
 
-        base64_data = base64.b64encode(bytes_data).decode('utf-8')
-        data_url = f'data:application/octet-stream;base64,{base64_data}'
+        base64_data = base64.b64encode(bytes_data).decode("utf-8")
+        data_url = f"data:application/octet-stream;base64,{base64_data}"
 
-        link = document.createElement('a')
+        link = document.createElement("a")
         link.href = data_url
         link.download = filename
         link.click()
 
-        update_status('save-status', f'Mask downloaded successfully as {filename}', 'success')
+        update_status("save-status", f"Mask downloaded successfully as {filename}", "success")
 
     except Exception as e:
-        update_status('save-status', f'Error saving: {str(e)}', 'error')
+        update_status("save-status", f"Error saving: {str(e)}", "error")
         console.error(str(e))
 
 
 def setup_listeners():
     """Set up all event listeners"""
-    document.getElementById('t1-file').addEventListener('change', create_proxy(on_t1_load))
-    document.getElementById('mask-file').addEventListener('change', create_proxy(on_mask_load))
+    document.getElementById("t1-file").addEventListener("change", create_proxy(on_t1_load))
+    document.getElementById("mask-file").addEventListener("change", create_proxy(on_mask_load))
 
-    document.getElementById('slider-x').addEventListener('input', create_proxy(on_slider_change))
-    document.getElementById('slider-y').addEventListener('input', create_proxy(on_slider_change))
-    document.getElementById('slider-z').addEventListener('input', create_proxy(on_slider_change))
+    document.getElementById("slider-x").addEventListener("input", create_proxy(on_slider_change))
+    document.getElementById("slider-y").addEventListener("input", create_proxy(on_slider_change))
+    document.getElementById("slider-z").addEventListener("input", create_proxy(on_slider_change))
 
-    document.getElementById('apply-btn').addEventListener('click', create_proxy(apply_operations))
-    document.getElementById('reset-btn').addEventListener('click', create_proxy(reset_mask))
-    document.getElementById('save-btn').addEventListener('click', create_proxy(save_mask))
+    document.getElementById("apply-btn").addEventListener("click", create_proxy(apply_operations))
+    document.getElementById("reset-btn").addEventListener("click", create_proxy(reset_mask))
+    document.getElementById("save-btn").addEventListener("click", create_proxy(save_mask))
 
-    console.log('Event listeners set up successfully')
+    console.log("Event listeners set up successfully")
 
 
 async def initialize():
@@ -423,20 +483,21 @@ async def initialize():
 
     console.log("Installing refregion package...")
     # Install without dependencies to avoid matplotlib version conflict
-    await micropip.install('./refregion-0.1.0-py3-none-any.whl', deps=False)
+    await micropip.install("./refregion-0.1.0-py3-none-any.whl", deps=False)
     console.log("refregion package installed")
 
     # Import morphology module after package is installed
     from refregion import morphology as morph
+
     morphology = morph
     console.log("morphology module imported")
 
     setup_listeners()
 
-    document.getElementById('loading').style.display = 'none'
-    document.getElementById('main-content').style.display = 'block'
+    document.getElementById("loading").style.display = "none"
+    document.getElementById("main-content").style.display = "block"
 
-    console.log('PET Reference Region Editor initialized')
+    console.log("PET Reference Region Editor initialized")
 
 
 # Start the application

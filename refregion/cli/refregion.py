@@ -67,8 +67,8 @@ def main():
     if (args.probability_mask is not None) != (args.probability_threshold is not None):
         parser.error("--probability_mask and --probability_threshold must be used together")
 
-    # load images
-    wrappers.custom_ref_region(
+    # create reference region
+    result_metrics = wrappers.custom_ref_region(
         mask_file=args.mask,
         output_file=args.output,
         refregion_indices=args.ref_indices,
@@ -78,3 +78,8 @@ def main():
         probability_mask_file=args.probability_mask,
         probability_threshold=args.probability_threshold,
     )
+
+    print("Morphometrics:")
+    print(f"  Voxel count:           {result_metrics['voxel_count']}")
+    print(f"  Volume (mm3):          {result_metrics['volume_mm3']:.2f}")
+    print(f"  Retention (%):         {result_metrics['retention_percentage']:.2f}")
