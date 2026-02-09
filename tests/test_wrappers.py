@@ -2,7 +2,7 @@ import numpy as np
 import nibabel as nib
 import tempfile
 from pathlib import Path
-from refregion.wrappers import custom_ref_region
+from refregion.wrappers import custom_ref_region, cerebellum_reference_region
 
 
 def test_custom_ref_region_wrapper_basic():
@@ -137,3 +137,66 @@ def test_custom_ref_region_wrapper_output_dtype():
         # Check output dtype
         result_img = nib.load(output_file)
         assert result_img.get_data_dtype() == np.uint8
+
+
+def test_custom_ref_region_returns_metrics():
+    """Test that custom_ref_region returns a metrics dict with correct keys and types."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        mask_file = Path(temp_dir) / "mask.nii"
+        output_file = Path(temp_dir) / "output.nii"
+
+        mask_data = np.array([[[1, 2], [1, 2]], [[1, 2], [1, 2]]], dtype=np.float32)
+        affine = np.eye(4)
+        nib.save(nib.Nifti1Image(mask_data, affine), mask_file)
+
+        result = custom_ref_region(
+            mask_file=mask_file,
+            output_file=output_file,
+            refregion_indices=[1, 2],
+            erode_by_voxels=0,
+            exclude_indices=[],
+            dilate_by_voxels=0,
+        )
+
+        assert isinstance(result, dict)
+        assert "voxel_count" in result
+        assert "volume_mm3" in result
+        assert "retention_percentage" in result
+        assert isinstance(result["voxel_count"], int)
+        assert isinstance(result["volume_mm3"], float)
+        assert isinstance(result["retention_percentage"], float)
+        # All 8 voxels selected, no erosion/exclusion → 100% retention
+        assert result["voxel_count"] == 8
+        assert result["retention_percentage"] == 100.0
+
+
+def test_cerebellum_reference_region_returns_metrics():
+    """Test that cerebellum_reference_region returns a metrics dict."""
+    with tempfile.TemporaryDirectory() as temp_dir:
+        cerebellum_file = Path(temp_dir) / "cerebellum.nii"
+        brain_file = Path(temp_dir) / "brain.nii"
+        output_file = Path(temp_dir) / "output.nii"
+
+        cerebellum_data = np.zeros((10, 10, 10), dtype=np.float32)
+        brain_data = np.zeros((10, 10, 10), dtype=np.float32)
+
+        # Add cerebellum regions
+        cerebellum_data[3:7, 3:7, 3:7] = 601
+
+        affine = np.eye(4)
+        nib.save(nib.Nifti1Image(cerebellum_data, affine), cerebellum_file)
+        nib.save(nib.Nifti1Image(brain_data, affine), brain_file)
+
+        result = cerebellum_reference_region(
+            cerebellum_segmentation_file=cerebellum_file,
+            brain_segmentation=brain_file,
+            output_reference_region=output_file,
+        )
+
+        assert isinstance(result, dict)
+        assert "voxel_count" in result
+        assert "volume_mm3" in result
+        assert "retention_percentage" in result
+        assert isinstance(result["voxel_count"], int)
+        assert isinstance(result["volume_mm3"], float)
+        assert isinstance(result["retention_percentage"], float)
