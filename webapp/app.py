@@ -455,9 +455,9 @@ def export_config(event):
         link.download = f"{region_name}.yaml"
         link.click()
 
-        update_status("config-status", f"Config exported as {region_name}.yaml", "success")
+        update_status("save-status", f"Config exported as {region_name}.yaml", "success")
     except Exception as e:
-        update_status("config-status", f"Error exporting config: {str(e)}", "error")
+        update_status("save-status", f"Error exporting config: {str(e)}", "error")
         console.error(str(e))
 
 
@@ -482,12 +482,12 @@ async def import_config(event):
             data = yaml.safe_load(text)
 
         if not isinstance(data, dict) or "reference_regions" not in data:
-            update_status("config-status", "Invalid config file: missing reference_regions", "error")
+            update_status("load-status", "Invalid config file: missing reference_regions", "error")
             return
 
         regions = data["reference_regions"]
         if not regions:
-            update_status("config-status", "Config file has no reference regions", "error")
+            update_status("load-status", "Config file has no reference regions", "error")
             return
 
         # Use the first region to populate UI
@@ -520,13 +520,13 @@ async def import_config(event):
         msg = f"Config imported from {filename}"
         if n_regions > 1:
             msg += f" (loaded first of {n_regions} regions)"
-        update_status("config-status", msg, "success")
+        update_status("load-status", msg, "success")
 
         # Reset file input so the same file can be re-imported
         event.target.value = ""
 
     except Exception as e:
-        update_status("config-status", f"Error importing config: {str(e)}", "error")
+        update_status("load-status", f"Error importing config: {str(e)}", "error")
         console.error(str(e))
 
 
