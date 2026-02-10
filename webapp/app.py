@@ -28,6 +28,8 @@ class DataStore:
         self.available_indices = []
         self.mask_indices = []
         self.exclusion_indices = []
+        self.config_regions = []
+        self.selected_region_index = 0
 
 
 store = DataStore()
@@ -299,6 +301,115 @@ def update_morphometrics(mask_indices, processed_mask):
     )
 
 
+def update_save_filename():
+    """Update the save filename based on the current region name."""
+    name = document.getElementById("region-name-input").value.strip()
+    filename = f"label-{name}_mask.nii.gz" if name else "processed_mask.nii.gz"
+    document.getElementById("save-filename").value = filename
+
+
+def sync_ui_to_current_region():
+    """Read current UI field values and write them into the currently selected config region."""
+    if not store.config_regions:
+        return
+    idx = store.selected_region_index
+    if idx < 0 or idx >= len(store.config_regions):
+        return
+
+    region = store.config_regions[idx]
+    region["name"] = document.getElementById("region-name-input").value.strip() or "reference_region"
+
+    mask_text = document.getElementById("mask-indices-input").value.strip()
+    ref_indices = []
+    if mask_text:
+        for part in mask_text.split(","):
+            part = part.strip()
+            if part:
+                try:
+                    ref_indices.append(int(part))
+                except ValueError:
+                    pass
+    region["ref_indices"] = ref_indices
+
+    exclusion_text = document.getElementById("exclusion-indices-input").value.strip()
+    exclude_indices = []
+    if exclusion_text:
+        for part in exclusion_text.split(","):
+            part = part.strip()
+            if part:
+                try:
+                    exclude_indices.append(int(part))
+                except ValueError:
+                    pass
+    region["exclude_indices"] = exclude_indices
+
+    region["erode"] = int(document.getElementById("erosion-radius").value)
+    region["dilate"] = int(document.getElementById("dilation-radius").value)
+
+
+def load_region_to_ui(region_dict):
+    """Populate UI fields from a region dict."""
+    if "name" in region_dict:
+        document.getElementById("region-name-input").value = region_dict["name"]
+
+    if "ref_indices" in region_dict:
+        document.getElementById("mask-indices-input").value = ", ".join(str(i) for i in region_dict["ref_indices"])
+    else:
+        document.getElementById("mask-indices-input").value = ""
+
+    if "exclude_indices" in region_dict and region_dict["exclude_indices"]:
+        document.getElementById("exclusion-indices-input").value = ", ".join(
+            str(i) for i in region_dict["exclude_indices"]
+        )
+    else:
+        document.getElementById("exclusion-indices-input").value = ""
+
+    if "erode" in region_dict:
+        document.getElementById("erosion-radius").value = str(region_dict["erode"])
+    else:
+        document.getElementById("erosion-radius").value = "0"
+
+    if "dilate" in region_dict:
+        document.getElementById("dilation-radius").value = str(region_dict["dilate"])
+    else:
+        document.getElementById("dilation-radius").value = "0"
+
+    update_save_filename()
+
+
+def populate_region_selector(regions):
+    """Populate the region selector dropdown and show/hide it."""
+    selector = document.getElementById("region-selector")
+    group = document.getElementById("region-selector-group")
+
+    # Clear existing options
+    selector.innerHTML = ""
+
+    for i, region in enumerate(regions):
+        option = document.createElement("option")
+        option.value = str(i)
+        option.textContent = region.get("name", f"Region {i + 1}")
+        selector.appendChild(option)
+
+    if len(regions) > 1:
+        group.style.display = "flex"
+    else:
+        group.style.display = "none"
+
+    selector.value = "0"
+
+
+def on_region_select(event):
+    """Handle region selector change: sync current state, load new region."""
+    # Save current UI state back to the previously selected region
+    sync_ui_to_current_region()
+
+    # Load the newly selected region
+    new_index = int(event.target.value)
+    store.selected_region_index = new_index
+    load_region_to_ui(store.config_regions[new_index])
+
+
 def apply_operations(event):
     """Apply morphology operations to selected mask and exclusion regions"""
     if store.mask_original is None:
@@ -391,6 +502,9 @@ def apply_operations(event):
         # Compute and display morphometrics
         update_morphometrics(mask_indices, result_mask)
 
+        # Update download filename to reflect current region name
+        update_save_filename()
+
         update_status(
             "load-status",
             f"Operations applied: {len(mask_indices)} mask region(s), {len(exclusion_indices)} exclusion region(s)",
@@ -413,49 +527,64 @@ def reset_mask(event):
     render_all_views()
 
 
+def _build_region_from_ui():
+    """Build a single region dict from current UI field values."""
+    region_name = document.getElementById("region-name-input").value.strip() or "reference_region"
+    mask_text = document.getElementById("mask-indices-input").value.strip()
+    exclusion_text = document.getElementById("exclusion-indices-input").value.strip()
+    erosion_radius = int(document.getElementById("erosion-radius").value)
+    dilation_radius = int(document.getElementById("dilation-radius").value)
+
+    mask_indices = []
+    if mask_text:
+        for part in mask_text.split(","):
+            part = part.strip()
+            if part:
+                mask_indices.append(int(part))
+
+    exclusion_indices = []
+    if exclusion_text:
+        for part in exclusion_text.split(","):
+            part = part.strip()
+            if part:
+                exclusion_indices.append(int(part))
+
+    region = {"name": region_name, "ref_indices": mask_indices, "erode": erosion_radius}
+    if exclusion_indices:
+        region["exclude_indices"] = exclusion_indices
+    if dilation_radius > 0:
+        region["dilate"] = dilation_radius
+
+    return region
+
+
 def export_config(event):
     """Export current UI parameters as a YAML config file for download."""
     try:
         import yaml
 
-        region_name = document.getElementById("region-name-input").value.strip() or "reference_region"
-        mask_text = document.getElementById("mask-indices-input").value.strip()
-        exclusion_text = document.getElementById("exclusion-indices-input").value.strip()
-        erosion_radius = int(document.getElementById("erosion-radius").value)
-        dilation_radius = int(document.getElementById("dilation-radius").value)
+        # Sync current UI state back to stored regions
+        sync_ui_to_current_region()
 
-        mask_indices = []
-        if mask_text:
-            for part in mask_text.split(","):
-                part = part.strip()
-                if part:
-                    mask_indices.append(int(part))
+        if store.config_regions:
+            regions = store.config_regions
+        else:
+            regions = [_build_region_from_ui()]
 
-        exclusion_indices = []
-        if exclusion_text:
-            for part in exclusion_text.split(","):
-                part = part.strip()
-                if part:
-                    exclusion_indices.append(int(part))
-
-        region = {"name": region_name, "ref_indices": mask_indices, "erode": erosion_radius}
-        if exclusion_indices:
-            region["exclude_indices"] = exclusion_indices
-        if dilation_radius > 0:
-            region["dilate"] = dilation_radius
-
-        config_data = {"version": 1, "reference_regions": [region]}
+        config_data = {"version": 1, "reference_regions": regions}
 
         yaml_str = yaml.dump(config_data, default_flow_style=False, sort_keys=False)
         encoded = base64.b64encode(yaml_str.encode("utf-8")).decode("utf-8")
         data_url = f"data:application/x-yaml;base64,{encoded}"
 
+        filename = regions[0].get("name", "reference_region") if regions else "reference_region"
+
         link = document.createElement("a")
         link.href = data_url
-        link.download = f"{region_name}.yaml"
+        link.download = f"{filename}.yaml"
         link.click()
 
-        update_status("save-status", f"Config exported as {region_name}.yaml", "success")
+        update_status("save-status", f"Config exported as {filename}.yaml ({len(regions)} region(s))", "success")
     except Exception as e:
         update_status("save-status", f"Error exporting config: {str(e)}", "error")
         console.error(str(e))
@@ -490,36 +619,16 @@ async def import_config(event):
             update_status("load-status", "Config file has no reference regions", "error")
             return
 
-        # Use the first region to populate UI
-        region = regions[0]
+        # Store all regions for multi-region support
+        store.config_regions = regions
+        store.selected_region_index = 0
 
-        if "name" in region:
-            document.getElementById("region-name-input").value = region["name"]
-
-        if "ref_indices" in region:
-            document.getElementById("mask-indices-input").value = ", ".join(str(i) for i in region["ref_indices"])
-
-        if "exclude_indices" in region:
-            document.getElementById("exclusion-indices-input").value = ", ".join(
-                str(i) for i in region["exclude_indices"]
-            )
-        else:
-            document.getElementById("exclusion-indices-input").value = ""
-
-        if "erode" in region:
-            document.getElementById("erosion-radius").value = str(region["erode"])
-        else:
-            document.getElementById("erosion-radius").value = "0"
-
-        if "dilate" in region:
-            document.getElementById("dilation-radius").value = str(region["dilate"])
-        else:
-            document.getElementById("dilation-radius").value = "0"
+        # Populate dropdown and load first region into UI
+        populate_region_selector(regions)
+        load_region_to_ui(regions[0])
 
         n_regions = len(regions)
-        msg = f"Config imported from {filename}"
-        if n_regions > 1:
-            msg += f" (loaded first of {n_regions} regions)"
+        msg = f"Config imported from {filename} ({n_regions} region(s))"
         update_status("load-status", msg, "success")
 
         # Reset file input so the same file can be re-imported
@@ -590,6 +699,10 @@ def setup_listeners():
     document.getElementById("save-btn").addEventListener("click", create_proxy(save_mask))
     document.getElementById("export-config-btn").addEventListener("click", create_proxy(export_config))
     document.getElementById("import-config-file").addEventListener("change", create_proxy(import_config))
+    document.getElementById("region-selector").addEventListener("change", create_proxy(on_region_select))
+    document.getElementById("region-name-input").addEventListener(
+        "input", create_proxy(lambda e: update_save_filename())
+    )
 
     console.log("Event listeners set up successfully")
 
