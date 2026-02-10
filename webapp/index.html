@@ -270,12 +270,20 @@
                         <label for="mask-file">Segmentation Mask (NIfTI/MGZ):</label>
                         <input type="file" id="mask-file" accept=".nii,.nii.gz,.mgz">
                     </div>
+                    <div class="file-input-item">
+                        <label for="import-config-file">Configuration (YAML/JSON):</label>
+                        <input type="file" id="import-config-file" accept=".yaml,.yml,.json">
+                    </div>
                 </div>
                 <div id="load-status"></div>
             </div>
 
             <div class="section">
                 <h2>2. Select Indices</h2>
+                <div class="control-group" style="max-width: 400px; margin-bottom: 15px;">
+                    <label for="region-name-input">Region Name:</label>
+                    <input type="text" id="region-name-input" value="reference_region" placeholder="e.g., cerebellum" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
+                </div>
                 <p style="color: #666; margin-bottom: 15px; font-size: 14px;">Available mask indices: <span id="available-indices" style="font-weight: 600; color: #4CAF50;">Load a mask file to see available indices</span></p>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div class="control-group">
@@ -317,25 +325,7 @@
             </div>
 
             <div class="section">
-                <h2>5. Configuration</h2>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
-                    <div class="control-group">
-                        <label for="region-name-input">Region Name:</label>
-                        <input type="text" id="region-name-input" value="reference_region" placeholder="e.g., cerebellum">
-                    </div>
-                </div>
-                <div class="button-group">
-                    <button id="export-config-btn">Export Config (YAML)</button>
-                    <div class="file-input-item" style="display: inline-block;">
-                        <label for="import-config-file" style="display: inline; cursor: pointer; background: #4CAF50; color: white; padding: 12px 24px; border-radius: 5px; font-size: 14px; font-weight: 600;">Import Config</label>
-                        <input type="file" id="import-config-file" accept=".yaml,.yml,.json" style="display: none;">
-                    </div>
-                </div>
-                <div id="config-status"></div>
-            </div>
-
-            <div class="section">
-                <h2>6. Visualization</h2>
+                <h2>5. Visualization</h2>
                 <div class="visualization">
                     <div class="plane-view">
                         <h3>Coronal (Z)</h3>
@@ -365,12 +355,15 @@
             </div>
 
             <div class="section">
-                <h2>7. Save Processed Mask</h2>
+                <h2>6. Save</h2>
                 <div class="control-group" style="max-width: 500px; margin-bottom: 15px;">
                     <label for="save-filename">Filename:</label>
                     <input type="text" id="save-filename" value="processed_mask.nii.gz" placeholder="Enter filename (e.g., processed_mask.nii.gz)">
                 </div>
-                <button id="save-btn" disabled>Download Processed Mask</button>
+                <div class="button-group">
+                    <button id="save-btn" disabled>Download Processed Mask</button>
+                    <button id="export-config-btn">Export Config (YAML)</button>
+                </div>
                 <div id="save-status"></div>
             </div>
         </div>
