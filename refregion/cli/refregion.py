@@ -5,11 +5,29 @@ from pathlib import Path
 from refregion import config, wrappers
 
 
-def _run_from_config(config_path):
-    """Load a config file and run all defined reference regions."""
+def _run_from_config(config_path, region_names=None):
+    """Load a config file and run all defined reference regions.
+
+    Args:
+        config_path: Path to the config file.
+        region_names: Optional list of region names to run. If None, run all.
+    """
     cfg = config.load_config(config_path)
 
-    for region in cfg.reference_regions:
+    if region_names is not None:
+        available = [r.name for r in cfg.reference_regions]
+        missing = [n for n in region_names if n not in available]
+        if missing:
+            print(
+                f"Error: region(s) not found: {', '.join(missing)}. " f"Available regions: {', '.join(available)}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        regions = [r for r in cfg.reference_regions if r.name in region_names]
+    else:
+        regions = cfg.reference_regions
+
+    for region in regions:
         if region.mask_file is None:
             print(f"Error: region '{region.name}' is missing mask_file", file=sys.stderr)
             sys.exit(1)
@@ -94,13 +112,23 @@ def main():
         default=None,
         help="Path to the output reference region file",
     )
+    parser.add_argument(
+        "--region",
+        nargs="+",
+        default=None,
+        help="Region name(s) to run from config file (requires --config)",
+    )
     args = parser.parse_args()
+
+    # --region requires --config
+    if args.region is not None and args.config is None:
+        parser.error("--region requires --config")
 
     # Mutual exclusivity: --config vs --mask/--ref_indices/--output
     if args.config is not None:
         if args.mask is not None or args.ref_indices is not None or args.output is not None:
             parser.error("--config cannot be used together with --mask, --ref_indices, or --output")
-        _run_from_config(args.config)
+        _run_from_config(args.config, region_names=args.region)
         return
 
     # Without --config, require --mask, --ref_indices, --output
