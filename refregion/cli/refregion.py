@@ -1,18 +1,51 @@
 import argparse
+import sys
 from pathlib import Path
 
-from refregion import wrappers
+from refregion import config, wrappers
+
+
+def _run_from_config(config_path):
+    """Load a config file and run all defined reference regions."""
+    cfg = config.load_config(config_path)
+
+    for region in cfg.reference_regions:
+        if region.mask_file is None:
+            print(f"Error: region '{region.name}' is missing mask_file", file=sys.stderr)
+            sys.exit(1)
+        if region.output_file is None:
+            print(f"Error: region '{region.name}' is missing output_file", file=sys.stderr)
+            sys.exit(1)
+
+        prob_mask = Path(region.probability_mask_file) if region.probability_mask_file else None
+
+        result_metrics = wrappers.custom_ref_region(
+            mask_file=Path(region.mask_file),
+            output_file=Path(region.output_file),
+            refregion_indices=region.ref_indices,
+            erode_by_voxels=region.erode,
+            exclude_indices=region.exclude_indices,
+            dilate_by_voxels=region.dilate,
+            probability_mask_file=prob_mask,
+            probability_threshold=region.probability_threshold,
+        )
+
+        print(f"Region: {region.name}")
+        print(f"  Voxel count:           {result_metrics['voxel_count']}")
+        print(f"  Volume (mm3):          {result_metrics['volume_mm3']:.2f}")
+        print(f"  Retention (%):         {result_metrics['retention_percentage']:.2f}")
 
 
 def main():
     parser = argparse.ArgumentParser(description="Create a custom reference region from a mask")
-    parser.add_argument("--mask", "-m", type=Path, required=True, help="Path to the mask file")
+    parser.add_argument("--config", "-c", type=Path, default=None, help="Path to a YAML/JSON config file")
+    parser.add_argument("--mask", "-m", type=Path, default=None, help="Path to the mask file")
     parser.add_argument(
         "--ref_indices",
         "-r",
         type=int,
         nargs="+",
-        required=True,
+        default=None,
         help="Indices to include in the reference region (space-separated integers)",
     )
     parser.add_argument(
@@ -58,10 +91,25 @@ def main():
         "--output",
         "-o",
         type=Path,
-        required=True,
+        default=None,
         help="Path to the output reference region file",
     )
     args = parser.parse_args()
+
+    # Mutual exclusivity: --config vs --mask/--ref_indices/--output
+    if args.config is not None:
+        if args.mask is not None or args.ref_indices is not None or args.output is not None:
+            parser.error("--config cannot be used together with --mask, --ref_indices, or --output")
+        _run_from_config(args.config)
+        return
+
+    # Without --config, require --mask, --ref_indices, --output
+    if args.mask is None:
+        parser.error("--mask is required when not using --config")
+    if args.ref_indices is None:
+        parser.error("--ref_indices is required when not using --config")
+    if args.output is None:
+        parser.error("--output is required when not using --config")
 
     # Validate probability mask arguments
     if (args.probability_mask is not None) != (args.probability_threshold is not None):
