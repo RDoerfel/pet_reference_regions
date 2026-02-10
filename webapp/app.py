@@ -413,6 +413,123 @@ def reset_mask(event):
     render_all_views()
 
 
+def export_config(event):
+    """Export current UI parameters as a YAML config file for download."""
+    try:
+        import yaml
+
+        region_name = document.getElementById("region-name-input").value.strip() or "reference_region"
+        mask_text = document.getElementById("mask-indices-input").value.strip()
+        exclusion_text = document.getElementById("exclusion-indices-input").value.strip()
+        erosion_radius = int(document.getElementById("erosion-radius").value)
+        dilation_radius = int(document.getElementById("dilation-radius").value)
+
+        mask_indices = []
+        if mask_text:
+            for part in mask_text.split(","):
+                part = part.strip()
+                if part:
+                    mask_indices.append(int(part))
+
+        exclusion_indices = []
+        if exclusion_text:
+            for part in exclusion_text.split(","):
+                part = part.strip()
+                if part:
+                    exclusion_indices.append(int(part))
+
+        region = {"name": region_name, "ref_indices": mask_indices, "erode": erosion_radius}
+        if exclusion_indices:
+            region["exclude_indices"] = exclusion_indices
+        if dilation_radius > 0:
+            region["dilate"] = dilation_radius
+
+        config_data = {"version": 1, "reference_regions": [region]}
+
+        yaml_str = yaml.dump(config_data, default_flow_style=False, sort_keys=False)
+        encoded = base64.b64encode(yaml_str.encode("utf-8")).decode("utf-8")
+        data_url = f"data:application/x-yaml;base64,{encoded}"
+
+        link = document.createElement("a")
+        link.href = data_url
+        link.download = f"{region_name}.yaml"
+        link.click()
+
+        update_status("config-status", f"Config exported as {region_name}.yaml", "success")
+    except Exception as e:
+        update_status("config-status", f"Error exporting config: {str(e)}", "error")
+        console.error(str(e))
+
+
+async def import_config(event):
+    """Import a YAML/JSON config file and populate UI fields."""
+    try:
+        import yaml
+
+        files = event.target.files
+        if len(files) == 0:
+            return
+
+        file = files.item(0)
+        filename = file.name
+        text = await file.text()
+
+        if filename.endswith(".json"):
+            import json
+
+            data = json.loads(text)
+        else:
+            data = yaml.safe_load(text)
+
+        if not isinstance(data, dict) or "reference_regions" not in data:
+            update_status("config-status", "Invalid config file: missing reference_regions", "error")
+            return
+
+        regions = data["reference_regions"]
+        if not regions:
+            update_status("config-status", "Config file has no reference regions", "error")
+            return
+
+        # Use the first region to populate UI
+        region = regions[0]
+
+        if "name" in region:
+            document.getElementById("region-name-input").value = region["name"]
+
+        if "ref_indices" in region:
+            document.getElementById("mask-indices-input").value = ", ".join(str(i) for i in region["ref_indices"])
+
+        if "exclude_indices" in region:
+            document.getElementById("exclusion-indices-input").value = ", ".join(
+                str(i) for i in region["exclude_indices"]
+            )
+        else:
+            document.getElementById("exclusion-indices-input").value = ""
+
+        if "erode" in region:
+            document.getElementById("erosion-radius").value = str(region["erode"])
+        else:
+            document.getElementById("erosion-radius").value = "0"
+
+        if "dilate" in region:
+            document.getElementById("dilation-radius").value = str(region["dilate"])
+        else:
+            document.getElementById("dilation-radius").value = "0"
+
+        n_regions = len(regions)
+        msg = f"Config imported from {filename}"
+        if n_regions > 1:
+            msg += f" (loaded first of {n_regions} regions)"
+        update_status("config-status", msg, "success")
+
+        # Reset file input so the same file can be re-imported
+        event.target.value = ""
+
+    except Exception as e:
+        update_status("config-status", f"Error importing config: {str(e)}", "error")
+        console.error(str(e))
+
+
 def save_mask(event):
     """Save the processed mask as a NIfTI file"""
     if store.processed_mask is None or store.mask_img is None:
@@ -471,6 +588,8 @@ def setup_listeners():
     document.getElementById("apply-btn").addEventListener("click", create_proxy(apply_operations))
     document.getElementById("reset-btn").addEventListener("click", create_proxy(reset_mask))
     document.getElementById("save-btn").addEventListener("click", create_proxy(save_mask))
+    document.getElementById("export-config-btn").addEventListener("click", create_proxy(export_config))
+    document.getElementById("import-config-file").addEventListener("change", create_proxy(import_config))
 
     console.log("Event listeners set up successfully")
 
