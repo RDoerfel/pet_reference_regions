@@ -280,6 +280,10 @@
 
             <div class="section">
                 <h2>2. Select Indices</h2>
+                <div id="region-selector-group" class="control-group" style="max-width: 400px; margin-bottom: 15px; display: none;">
+                    <label for="region-selector">Region:</label>
+                    <select id="region-selector" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;"></select>
+                </div>
                 <div class="control-group" style="max-width: 400px; margin-bottom: 15px;">
                     <label for="region-name-input">Region Name:</label>
                     <input type="text" id="region-name-input" value="reference_region" placeholder="e.g., cerebellum" style="padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px;">
@@ -358,7 +362,7 @@
                 <h2>6. Save</h2>
                 <div class="control-group" style="max-width: 500px; margin-bottom: 15px;">
                     <label for="save-filename">Filename:</label>
-                    <input type="text" id="save-filename" value="processed_mask.nii.gz" placeholder="Enter filename (e.g., processed_mask.nii.gz)">
+                    <input type="text" id="save-filename" value="label-reference_region_mask.nii.gz" placeholder="Enter filename (e.g., label-cerebellum_mask.nii.gz)">
                 </div>
                 <div class="button-group">
                     <button id="save-btn" disabled>Download Processed Mask</button>
