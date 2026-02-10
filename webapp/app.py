@@ -392,7 +392,7 @@ def populate_region_selector(regions):
         selector.appendChild(option)
 
     if len(regions) > 1:
-        group.style.display = "block"
+        group.style.display = "flex"
     else:
         group.style.display = "none"
 
@@ -700,6 +700,9 @@ def setup_listeners():
     document.getElementById("export-config-btn").addEventListener("click", create_proxy(export_config))
     document.getElementById("import-config-file").addEventListener("change", create_proxy(import_config))
     document.getElementById("region-selector").addEventListener("change", create_proxy(on_region_select))
+    document.getElementById("region-name-input").addEventListener(
+        "input", create_proxy(lambda e: update_save_filename())
+    )
 
     console.log("Event listeners set up successfully")
 
